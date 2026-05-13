@@ -148,7 +148,7 @@ tr:hover td { background:var(--surface2); }
     </div>
     <div class="header-right">
       <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
-      <div class="version-badge">v1.03</div>
+      <div class="version-badge">v1.04</div>
     </div>
   </div>
 
@@ -282,6 +282,7 @@ let holdings = [], transactions = [], snapshots = [];
 let prices = {}, lastPrices = {}, lastPricesWithDate = {};
 let usdRate = null, chartInstance = null, currentTab = 'active';
 let pendingSell = null, manualPriceResolve = null;
+let isLoading = false;
 
 // ── Debug ──────────────────────────────────────────
 function log(tag, msg, level='info') {
@@ -609,6 +610,8 @@ function saveSetup() {
 
 // ── 主流程 ──────────────────────────────────────────
 async function loadAndRender() {
+  if (isLoading) { log('SYS', '已在載入中，略過重複呼叫', 'warn'); return; }
+  isLoading = true;
   setStatus('loading','載入資料中...');
   try {
     const [hRes, txRes, snapRes, lpRes] = await Promise.all([
@@ -631,6 +634,7 @@ async function loadAndRender() {
   } catch(e) {
     setStatus('error','Google Sheet 連線失敗');
     document.getElementById('holdingsTable').innerHTML='<div class="empty-state">無法連線到 Google Sheet，請確認 API URL 與 Token 設定</div>';
+    isLoading = false;
     return;
   }
 
@@ -669,6 +673,7 @@ async function loadAndRender() {
     } catch(e) { log('SNAPSHOT',`寫入失敗: ${e.message}`,'err'); }
   }
 
+  isLoading = false;
   setStatus('ok',`最後更新：${new Date().toLocaleString('zh-TW')}`);
 }
 
