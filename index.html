@@ -31,7 +31,6 @@ body::before {
 }
 .container { max-width:1100px; margin:0 auto; padding:24px 20px; position:relative; z-index:1; }
 
-/* Header */
 .header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid var(--border); }
 .header-left h1 { font-family:var(--mono); font-size:20px; color:var(--accent); letter-spacing:3px; }
 .header-left .subtitle { font-size:11px; color:var(--text-dim); margin-top:4px; font-family:var(--mono); }
@@ -40,7 +39,6 @@ body::before {
 .rate-display { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
 .rate-display span { color:var(--accent); font-weight:700; }
 
-/* Status */
 .status-bar { display:flex; align-items:center; gap:8px; margin-bottom:20px; font-family:var(--mono); font-size:11px; color:var(--text-dim); }
 .status-dot { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
 .status-dot.loading { background:var(--accent2); animation:pulse 1s infinite; }
@@ -48,7 +46,6 @@ body::before {
 .status-dot.error { background:var(--red); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* Summary */
 .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
 .card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 18px; position:relative; overflow:hidden; }
 .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
@@ -59,16 +56,13 @@ body::before {
 .card-value.negative { color:var(--red); }
 .card-sub { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:var(--mono); }
 
-/* Section */
 .section { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:24px; }
 .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .section-title { font-family:var(--mono); font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; }
 
-/* Chart */
 canvas { width:100% !important; height:200px !important; }
 .chart-empty { height:200px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px; font-family:var(--mono); border:1px dashed var(--border); border-radius:6px; }
 
-/* Buttons */
 .btn { font-family:var(--mono); font-size:11px; padding:6px 12px; border-radius:4px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; letter-spacing:1px; transition:all 0.15s; white-space:nowrap; }
 .btn:hover { background:var(--accent); color:var(--bg); }
 .btn-danger { border-color:var(--red); color:var(--red); }
@@ -77,13 +71,11 @@ canvas { width:100% !important; height:200px !important; }
 .btn-warn:hover { background:var(--yellow); color:var(--bg); }
 .btn-sm { padding:4px 8px; font-size:10px; }
 
-/* Tabs */
-.tabs { display:flex; gap:4px; border-bottom:none; }
+.tabs { display:flex; gap:4px; }
 .tab { font-family:var(--mono); font-size:11px; color:var(--text-dim); padding:6px 14px; cursor:pointer; letter-spacing:1px; border-bottom:2px solid transparent; transition:all 0.15s; text-transform:uppercase; }
 .tab:hover { color:var(--text); }
 .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-/* Table */
 table { width:100%; border-collapse:collapse; font-size:12px; }
 th { font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
 th:first-child { text-align:left; }
@@ -99,7 +91,6 @@ tr:hover td { background:var(--surface2); }
 .na { color:var(--text-muted); }
 .empty-state { text-align:center; padding:36px; color:var(--text-muted); font-family:var(--mono); font-size:12px; }
 
-/* Add form */
 .add-form { display:none; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
 .add-form.visible { display:block; }
 .form-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
@@ -109,7 +100,6 @@ tr:hover td { background:var(--surface2); }
 .form-group select option { background:var(--surface); }
 .form-actions { display:flex; gap:10px; }
 
-/* Debug */
 .debug-section { margin-bottom:24px; }
 .debug-toggle { font-family:var(--mono); font-size:11px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:6px; user-select:none; letter-spacing:1px; }
 .debug-toggle:hover { color:var(--text-dim); }
@@ -125,7 +115,6 @@ tr:hover td { background:var(--surface2); }
 .debug-tag.warn { color:var(--yellow); }
 .debug-msg { color:var(--text-dim); word-break:break-all; }
 
-/* Modal */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.92); z-index:200; align-items:center; justify-content:center; }
 .modal-overlay.visible { display:flex; }
 .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; width:90%; max-width:440px; }
@@ -137,7 +126,6 @@ tr:hover td { background:var(--surface2); }
 .modal .mform-group input:focus { border-color:var(--accent); }
 .modal-actions { display:flex; gap:10px; margin-top:20px; }
 
-/* Setup */
 .setup-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.97); z-index:300; align-items:center; justify-content:center; }
 .setup-overlay.visible { display:flex; }
 
@@ -160,7 +148,7 @@ tr:hover td { background:var(--surface2); }
     </div>
     <div class="header-right">
       <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
-      <div class="version-badge">v1.01</div>
+      <div class="version-badge">v1.02</div>
     </div>
   </div>
 
@@ -212,7 +200,7 @@ tr:hover td { background:var(--surface2); }
 
     <div class="add-form" id="addForm">
       <div class="form-grid">
-        <div class="form-group"><label>股票代碼</label><input type="text" id="f_symbol" placeholder="2330 / AAPL"></div>
+        <div class="form-group"><label>股票代碼</label><input type="text" id="f_symbol" placeholder="2330 / QQQM"></div>
         <div class="form-group"><label>市場</label>
           <select id="f_currency">
             <option value="TWD">台股（TWD）</option>
@@ -261,7 +249,7 @@ tr:hover td { background:var(--surface2); }
 <div class="modal-overlay" id="priceModal">
   <div class="modal">
     <h2>無法取得股價</h2>
-    <div class="modal-sub" id="priceModalSub">請手動輸入當前股價</div>
+    <div class="modal-sub" id="priceModalSub">Apps Script 抓取失敗，請手動輸入</div>
     <div class="mform-group"><label>當前股價</label><input type="number" id="manual_price" placeholder="0.00" step="0.01"></div>
     <div class="modal-actions">
       <button class="btn" onclick="confirmManualPrice()">確認</button>
@@ -334,44 +322,72 @@ async function apiCall(params) {
   }
 }
 
-// ── 股價抓取 ────────────────────────────────────────
-async function fetchPrice(symbol, currency) {
-  const ticker = currency === 'TWD' ? symbol + '.TW' : symbol;
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
-  const tryFetch = async () => {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (!p) throw new Error('無法解析');
-    return p;
-  };
-  log('PRICE', `抓取 ${ticker}`);
-  try { const p = await tryFetch(); log('PRICE', `${ticker} = ${p}`, 'ok'); return p; }
-  catch(e) { log('PRICE', `${ticker} 失敗，retry... (${e.message})`, 'warn'); }
-  await new Promise(r => setTimeout(r, 1000));
-  try { const p = await tryFetch(); log('PRICE', `${ticker} retry = ${p}`, 'ok'); return p; }
-  catch(e) { log('PRICE', `${ticker} retry 失敗 (${e.message})`, 'warn'); }
-  if (lastPrices[symbol]) { log('PRICE', `${ticker} 使用快取 ${lastPrices[symbol]}`, 'warn'); return lastPrices[symbol]; }
-  log('PRICE', `${ticker} 無快取，請求手動輸入`, 'warn');
-  const manual = await askManualPrice(symbol, currency);
-  if (manual && manual > 0) {
-    try { await apiCall({ action:'setLastPrice', symbol, price:manual }); log('PRICE', `${symbol} 手動價格已存入`, 'ok'); }
-    catch(_) {}
-    return manual;
+// ── 股價抓取（透過 Apps Script）────────────────────────
+async function fetchAllPrices(holdingsList) {
+  // 組出 ticker 清單（台股加 .TW）
+  const symbolMap = {}; // ticker -> { symbol, currency }
+  for (const h of holdingsList) {
+    const ticker = h.currency === 'TWD' ? h.symbol + '.TW' : h.symbol;
+    symbolMap[ticker] = { symbol: h.symbol, currency: h.currency };
   }
-  return null;
+  const tickers = Object.keys(symbolMap);
+  if (!tickers.length) return;
+
+  log('PRICE', `批次抓取: ${tickers.join(', ')}`);
+  try {
+    const res = await apiCall({ action: 'getPrices', symbols: tickers.join(',') });
+    const data = res.data || {};
+
+    for (const [ticker, result] of Object.entries(data)) {
+      const sym = symbolMap[ticker]?.symbol;
+      if (!sym) continue;
+      if (result.price) {
+        prices[sym] = result.price;
+        log('PRICE', `${ticker} = ${result.price}`, 'ok');
+      } else {
+        log('PRICE', `${ticker} 失敗: ${result.error}`, 'warn');
+        // 嘗試快取
+        if (lastPrices[sym]) {
+          prices[sym] = lastPrices[sym];
+          log('PRICE', `${ticker} 使用快取 ${lastPrices[sym]}`, 'warn');
+        } else {
+          // 手動輸入
+          const manual = await askManualPrice(sym, symbolMap[ticker].currency);
+          prices[sym] = (manual && manual > 0) ? manual : null;
+          if (prices[sym]) {
+            try { await apiCall({ action:'setLastPrice', symbol:sym, price:prices[sym] }); }
+            catch(_) {}
+          }
+        }
+      }
+    }
+  } catch(e) {
+    log('PRICE', `批次抓取失敗: ${e.message}`, 'err');
+    // 全部 fallback 到快取或手動
+    for (const [ticker, meta] of Object.entries(symbolMap)) {
+      const sym = meta.symbol;
+      if (prices[sym] !== undefined) continue;
+      if (lastPrices[sym]) {
+        prices[sym] = lastPrices[sym];
+        log('PRICE', `${ticker} fallback 快取 ${lastPrices[sym]}`, 'warn');
+      } else {
+        const manual = await askManualPrice(sym, meta.currency);
+        prices[sym] = (manual && manual > 0) ? manual : null;
+      }
+    }
+  }
 }
 
 async function fetchUSDRate() {
-  log('FX', '抓取 USD/TWD');
+  log('FX', '抓取 USD/TWD（via Apps Script）');
   try {
-    const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDTWD=X?interval=1d&range=1d');
-    const data = await res.json();
-    const r = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (!r) throw new Error('解析失敗');
-    log('FX', `USD/TWD = ${r}`, 'ok'); return r;
-  } catch(e) { log('FX', `失敗，使用預設值 32.5: ${e.message}`, 'warn'); return 32.5; }
+    const res = await apiCall({ action: 'getUSDRate' });
+    if (res.rate) { log('FX', `USD/TWD = ${res.rate}`, 'ok'); return res.rate; }
+    throw new Error(res.error || '無回傳');
+  } catch(e) {
+    log('FX', `失敗，使用預設值 32.5: ${e.message}`, 'warn');
+    return 32.5;
+  }
 }
 
 // ── 手動股價 Modal ──────────────────────────────────
@@ -471,7 +487,7 @@ function renderTransactions(container) {
   container.innerHTML = `<table><thead><tr><th>代碼</th><th>股數</th><th>買入價</th><th>賣出價</th><th>損益</th><th>報酬率</th><th>賣出日</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// ── Summary cards ───────────────────────────────────
+// ── Summary ─────────────────────────────────────────
 function renderSummary() {
   let totalAssetTWD=0, totalCostTWD=0;
   const active = holdings.filter(h=>!h.sell_date||String(h.sell_date).trim()==='');
@@ -551,7 +567,7 @@ function openSellModal(symbol, ids, currency) {
   pendingSell = {symbol, ids, currency};
   document.getElementById('sellModalSub').textContent = `${symbol} — 填入賣出資訊`;
   document.getElementById('sell_date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('sell_price').value = '';
+  document.getElementById('sell_price').value = prices[symbol] ? prices[symbol] : '';
   document.getElementById('sellModal').classList.add('visible');
 }
 function closeSellModal() { document.getElementById('sellModal').classList.remove('visible'); pendingSell=null; }
@@ -583,8 +599,10 @@ async function loadAndRender() {
   setStatus('loading','載入資料中...');
   try {
     const [hRes, txRes, snapRes, lpRes] = await Promise.all([
-      apiCall({action:'getHoldings'}), apiCall({action:'getTransactions'}),
-      apiCall({action:'getSnapshots'}), apiCall({action:'getLastPrices'}),
+      apiCall({action:'getHoldings'}),
+      apiCall({action:'getTransactions'}),
+      apiCall({action:'getSnapshots'}),
+      apiCall({action:'getLastPrices'}),
     ]);
     holdings = hRes.data||[];
     transactions = txRes.data||[];
@@ -603,11 +621,13 @@ async function loadAndRender() {
   document.getElementById('usdRate').textContent = usdRate ? usdRate.toFixed(2) : '--';
 
   setStatus('loading','抓取股價...');
-  const active = holdings.filter(h=>!h.sell_date||String(h.sell_date).trim()==='');
   prices = {};
-  for (const h of active) {
-    if (prices[h.symbol]===undefined) prices[h.symbol] = await fetchPrice(h.symbol, h.currency);
-  }
+  const active = holdings.filter(h=>!h.sell_date||String(h.sell_date).trim()==='');
+  // 去重
+  const uniqueHoldings = [];
+  const seen = new Set();
+  for (const h of active) { if (!seen.has(h.symbol)) { seen.add(h.symbol); uniqueHoldings.push(h); } }
+  await fetchAllPrices(uniqueHoldings);
 
   // 更新 last_prices
   for (const [sym, price] of Object.entries(prices)) {
