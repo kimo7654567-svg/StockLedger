@@ -148,7 +148,7 @@ tr:hover td { background:var(--surface2); }
     </div>
     <div class="header-right">
       <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
-      <div class="version-badge">v1.02</div>
+      <div class="version-badge">v1.03</div>
     </div>
   </div>
 
@@ -279,7 +279,7 @@ let TOKEN = localStorage.getItem('sl_token') || '';
 // ============================
 
 let holdings = [], transactions = [], snapshots = [];
-let prices = {}, lastPrices = {};
+let prices = {}, lastPrices = {}, lastPricesWithDate = {};
 let usdRate = null, chartInstance = null, currentTab = 'active';
 let pendingSell = null, manualPriceResolve = null;
 
@@ -322,20 +322,37 @@ async function apiCall(params) {
   }
 }
 
-// ── 股價抓取（透過 Apps Script）────────────────────────
+// ── 股價抓取（透過 Apps Script，每日只抓一次）──────────────
 async function fetchAllPrices(holdingsList) {
-  // 組出 ticker 清單（台股加 .TW）
+  const today = new Date().toISOString().slice(0,10);
   const symbolMap = {}; // ticker -> { symbol, currency }
+  const needFetch = []; // 需要實際抓取的 ticker
+
   for (const h of holdingsList) {
     const ticker = h.currency === 'TWD' ? h.symbol + '.TW' : h.symbol;
     symbolMap[ticker] = { symbol: h.symbol, currency: h.currency };
   }
-  const tickers = Object.keys(symbolMap);
-  if (!tickers.length) return;
 
-  log('PRICE', `批次抓取: ${tickers.join(', ')}`);
+  // 判斷哪些有今日快取，哪些需要抓
+  for (const [ticker, meta] of Object.entries(symbolMap)) {
+    const sym = meta.symbol;
+    const cached = lastPricesWithDate[sym];
+    if (cached && cached.date === today) {
+      prices[sym] = cached.price;
+      log('PRICE', `${ticker} 使用今日快取 ${cached.price}`, 'info');
+    } else {
+      needFetch.push(ticker);
+    }
+  }
+
+  if (!needFetch.length) {
+    log('PRICE', '所有股票均有今日快取，略過抓取');
+    return;
+  }
+
+  log('PRICE', `批次抓取: ${needFetch.join(', ')}`);
   try {
-    const res = await apiCall({ action: 'getPrices', symbols: tickers.join(',') });
+    const res = await apiCall({ action: 'getPrices', symbols: needFetch.join(',') });
     const data = res.data || {};
 
     for (const [ticker, result] of Object.entries(data)) {
@@ -346,30 +363,26 @@ async function fetchAllPrices(holdingsList) {
         log('PRICE', `${ticker} = ${result.price}`, 'ok');
       } else {
         log('PRICE', `${ticker} 失敗: ${result.error}`, 'warn');
-        // 嘗試快取
         if (lastPrices[sym]) {
           prices[sym] = lastPrices[sym];
-          log('PRICE', `${ticker} 使用快取 ${lastPrices[sym]}`, 'warn');
+          log('PRICE', `${ticker} 使用舊快取 ${lastPrices[sym]}`, 'warn');
         } else {
-          // 手動輸入
           const manual = await askManualPrice(sym, symbolMap[ticker].currency);
           prices[sym] = (manual && manual > 0) ? manual : null;
           if (prices[sym]) {
-            try { await apiCall({ action:'setLastPrice', symbol:sym, price:prices[sym] }); }
-            catch(_) {}
+            try { await apiCall({ action:'setLastPrice', symbol:sym, price:prices[sym] }); } catch(_) {}
           }
         }
       }
     }
   } catch(e) {
     log('PRICE', `批次抓取失敗: ${e.message}`, 'err');
-    // 全部 fallback 到快取或手動
     for (const [ticker, meta] of Object.entries(symbolMap)) {
       const sym = meta.symbol;
       if (prices[sym] !== undefined) continue;
       if (lastPrices[sym]) {
         prices[sym] = lastPrices[sym];
-        log('PRICE', `${ticker} fallback 快取 ${lastPrices[sym]}`, 'warn');
+        log('PRICE', `${ticker} fallback 舊快取 ${lastPrices[sym]}`, 'warn');
       } else {
         const manual = await askManualPrice(sym, meta.currency);
         prices[sym] = (manual && manual > 0) ? manual : null;
@@ -608,7 +621,12 @@ async function loadAndRender() {
     transactions = txRes.data||[];
     snapshots = snapRes.data||[];
     lastPrices = {};
-    (lpRes.data||[]).forEach(r=>{ lastPrices[r.symbol]=parseFloat(r.price); });
+    (lpRes.data||[]).forEach(r=>{
+      lastPrices[r.symbol] = parseFloat(r.price);
+      // updated_at format: ISO string, slice to date
+      const d = r.updated_at ? String(r.updated_at).slice(0,10) : '';
+      lastPricesWithDate[r.symbol] = { price: parseFloat(r.price), date: d };
+    });
     log('DATA',`持倉 ${holdings.length}，交易 ${transactions.length}，快照 ${snapshots.length}，快取 ${Object.keys(lastPrices).length}`,'ok');
   } catch(e) {
     setStatus('error','Google Sheet 連線失敗');
