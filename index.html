@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票追蹤器</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --green: #00e676;
+    --red: #ff4444;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #334155;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Noto Sans TC', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header-left .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .version-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .rate-display {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .rate-display span {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .status-dot.loading { background: var(--accent2); animation: pulse 1s infinite; }
+  .status-dot.ok { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Summary cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .card-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+
+  .card-value {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .card-value.positive { color: var(--green); }
+  .card-value.negative { color: var(--red); }
+
+  .card-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* Chart */
+  .chart-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: 200px !important;
+  }
+
+  .chart-empty {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--mono);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+
+  /* Holdings table */
+  .holdings-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-danger {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .btn-danger:hover {
+    background: var(--red);
+    color: white;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th:first-child { text-align: left; }
+
+  td {
+    padding: 12px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  td:first-child {
+    text-align: left;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: var(--surface2); }
+
+  .symbol-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .symbol-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .symbol-meta {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .positive { color: var(--green); }
+  .negative { color: var(--red); }
+
+  /* Add form */
+  .add-form {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .add-form.visible { display: block; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+  }
+
+  .form-group select option { background: var(--surface); }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* Debug panel */
+  .debug-section {
+    margin-bottom: 28px;
+  }
+
+  .debug-toggle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    letter-spacing: 1px;
+  }
+
+  .debug-toggle:hover { color: var(--text-dim); }
+
+  .debug-panel {
+    display: none;
+    background: #060a10;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .debug-panel.visible { display: block; }
+
+  .debug-line {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+  }
+
+  .debug-line:last-child { border-bottom: none; }
+
+  .debug-time { color: var(--text-muted); min-width: 80px; }
+  .debug-tag { min-width: 120px; }
+  .debug-tag.ok { color: var(--green); }
+  .debug-tag.err { color: var(--red); }
+  .debug-tag.info { color: var(--accent); }
+  .debug-msg { color: var(--text-dim); word-break: break-all; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    table { font-size: 11px; }
+    td, th { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>STOCK TRACKER</h1>
+      <div class="subtitle">個人股票資產追蹤系統</div>
+    </div>
+    <div class="header-right">
+      <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
+      <div class="version-badge">v1.00</div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">初始化中...</span>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="card">
+      <div class="card-label">總資產（台幣）</div>
+      <div class="card-value" id="totalAsset">--</div>
+      <div class="card-sub" id="totalAssetSub">載入中</div>
+    </div>
+    <div class="card">
+      <div class="card-label">總投入成本</div>
+      <div class="card-value" id="totalCost">--</div>
+      <div class="card-sub" id="totalCostSub">所有持股合計</div>
+    </div>
+    <div class="card">
+      <div class="card-label">總損益</div>
+      <div class="card-value" id="totalPnl">--</div>
+      <div class="card-sub" id="totalPnlPct">投報率 --</div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-section">
+    <div class="section-title">▸ 總資產歷史走勢（台幣）</div>
+    <div id="chartContainer">
+      <div class="chart-empty" id="chartEmpty">資料累積中，每次開啟自動記錄節點</div>
+      <canvas id="assetChart" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <!-- Holdings -->
+  <div class="holdings-section">
+    <div class="section-header">
+      <div class="section-title" style="margin:0">▸ 持股清單</div>
+      <button class="btn" onclick="toggleAddForm()">＋ 新增持股</button>
+    </div>
+
+    <div class="add-form" id="addForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>股票代碼</label>
+          <input type="text" id="f_symbol" placeholder="2330 / AAPL">
+        </div>
+        <div class="form-group">
+          <label>市場</label>
+          <select id="f_currency">
+            <option value="TWD">台股（TWD）</option>
+            <option value="USD">美股（USD）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>買入日期</label>
+          <input type="date" id="f_date">
+        </div>
+        <div class="form-group">
+          <label>買入價格（每股）</label>
+          <input type="number" id="f_price" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>股數</label>
+          <input type="number" id="f_shares" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>備註（選填）</label>
+          <input type="text" id="f_note" placeholder="備註">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="addHolding()">確認新增</button>
+        <button class="btn btn-danger" onclick="toggleAddForm()">取消</button>
+      </div>
+    </div>
+
+    <div id="holdingsTable">
+      <div class="empty-state">載入持股中...</div>
+    </div>
+  </div>
+
+  <!-- Debug -->
+  <div class="debug-section">
+    <div class="debug-toggle" onclick="toggleDebug()">
+      <span id="debugArrow">▶</span> DEBUG LOG
+    </div>
+    <div class="debug-panel" id="debugPanel"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ============================
+// 設定區（請替換為你的資料）
+// ============================
+const API_URL = 'YOUR_API_URL';
+const TOKEN   = 'YOUR_TOKEN';
+// ============================
+
+let holdings = [];
+let snapshots = [];
+let prices = {};
+let usdRate = null;
+let chartInstance = null;
+
+// ── Debug ──────────────────────────────────────────
+function log(tag, msg, level = 'info') {
+  const panel = document.getElementById('debugPanel');
+  const now = new Date();
+  const t = now.toTimeString().slice(0,8);
+  const line = document.createElement('div');
+  line.className = 'debug-line';
+  line.innerHTML = `
+    <span class="debug-time">${t}</span>
+    <span class="debug-tag ${level}">[${tag}]</span>
+    <span class="debug-msg">${msg}</span>
+  `;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+  console.log(`[${tag}] ${msg}`);
+}
+
+function toggleDebug() {
+  const panel = document.getElementById('debugPanel');
+  const arrow = document.getElementById('debugArrow');
+  panel.classList.toggle('visible');
+  arrow.textContent = panel.classList.contains('visible') ? '▼' : '▶';
+}
+
+// ── Status ─────────────────────────────────────────
+function setStatus(state, msg) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot ' + state;
+  txt.textContent = msg;
+}
+
+// ── API 呼叫 ────────────────────────────────────────
+async function apiCall(params) {
+  const url = new URL(API_URL);
+  url.searchParams.set('token', TOKEN);
+  for (const [k, v] of Object.entries(params)) {
+    url.searchParams.set(k, v);
+  }
+  log('API', `action=${params.action}`, 'info');
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    log('API', `action=${params.action} → OK`, 'ok');
+    return data;
+  } catch (e) {
+    log('API', `action=${params.action} → ${e.message}`, 'err');
+    throw e;
+  }
+}
+
+// ── 股價抓取 ────────────────────────────────────────
+async function fetchPrice(symbol, currency) {
+  const ticker = currency === 'TWD' ? symbol + '.TW' : symbol;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+  log('PRICE', `fetching ${ticker}`);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (!price) throw new Error('無法解析股價');
+    log('PRICE', `${ticker} = ${price}`, 'ok');
+    return price;
+  } catch (e) {
+    log('PRICE', `${ticker} 失敗: ${e.message}`, 'err');
+    return null;
+  }
+}
+
+async function fetchUSDRate() {
+  log('FX', 'fetching USD/TWD');
+  try {
+    const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDTWD=X?interval=1d&range=1d');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const rate = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (!rate) throw new Error('無法解析匯率');
+    log('FX', `USD/TWD = ${rate}`, 'ok');
+    return rate;
+  } catch (e) {
+    log('FX', `失敗: ${e.message}`, 'err');
+    return 32.5; // fallback
+  }
+}
+
+// ── 計算輔助 ────────────────────────────────────────
+function calcYears(buyDate) {
+  const buy = new Date(buyDate);
+  const now = new Date();
+  return (now - buy) / (1000 * 60 * 60 * 24 * 365.25);
+}
+
+function calcCAGR(cost, value, years) {
+  if (years < 0.01 || cost <= 0) return 0;
+  return (Math.pow(value / cost, 1 / years) - 1) * 100;
+}
+
+function fmt(num, decimals = 0) {
+  if (num === null || num === undefined || isNaN(num)) return '--';
+  return num.toLocaleString('zh-TW', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtPct(num) {
+  if (isNaN(num)) return '--';
+  const sign = num >= 0 ? '+' : '';
+  return `${sign}${num.toFixed(2)}%`;
+}
+
+function fmtClass(num) {
+  return num >= 0 ? 'positive' : 'negative';
+}
+
+// ── 渲染持股表格 ─────────────────────────────────────
+function renderHoldings() {
+  const container = document.getElementById('holdingsTable');
+
+  if (!holdings.length) {
+    container.innerHTML = '<div class="empty-state">尚無持股，點擊右上角新增</div>';
+    return;
+  }
+
+  // 依symbol分組
+  const groups = {};
+  for (const h of holdings) {
+    if (!groups[h.symbol]) groups[h.symbol] = [];
+    groups[h.symbol].push(h);
+  }
+
+  let totalAssetTWD = 0;
+  let totalCostTWD = 0;
+
+  let rows = '';
+  for (const [symbol, items] of Object.entries(groups)) {
+    const currency = items[0].currency;
+    const currentPrice = prices[symbol];
+    const totalShares = items.reduce((s, i) => s + parseFloat(i.shares), 0);
+    const totalCost = items.reduce((s, i) => s + parseFloat(i.buy_price) * parseFloat(i.shares), 0);
+    const currentValue = currentPrice ? currentPrice * totalShares : null;
+
+    const costTWD = currency === 'USD' ? totalCost * (usdRate || 32.5) : totalCost;
+    const valueTWD = currentValue ? (currency === 'USD' ? currentValue * (usdRate || 32.5) : currentValue) : null;
+
+    totalCostTWD += costTWD;
+    if (valueTWD) totalAssetTWD += valueTWD;
+
+    const pnl = currentValue ? currentValue - totalCost : null;
+    const pnlPct = pnl !== null ? (pnl / totalCost) * 100 : null;
+
+    // 最早買入日
+    const earliestDate = items.reduce((d, i) => i.buy_date < d ? i.buy_date : d, items[0].buy_date);
+    const years = calcYears(earliestDate);
+    const cagr = valueTWD ? calcCAGR(costTWD, valueTWD, years) : null;
+
+    const ccy = currency === 'TWD' ? 'NT$' : '$';
+
+    rows += `<tr>
+      <td>
+        <div class="symbol-cell">
+          <span class="symbol-name">${symbol}</span>
+          <span class="symbol-meta">${currency} · ${totalShares} 股</span>
+        </div>
+      </td>
+      <td>${ccy}${fmt(totalCost, 2)}</td>
+      <td>${currentPrice ? ccy + fmt(currentPrice, 2) : '--'}</td>
+      <td>${currentValue ? ccy + fmt(currentValue, 2) : '--'}</td>
+      <td class="${pnlPct !== null ? fmtClass(pnlPct) : ''}">${pnlPct !== null ? fmtPct(pnlPct) : '--'}</td>
+      <td class="${cagr !== null ? fmtClass(cagr) : ''}">${cagr !== null ? fmtPct(cagr) : '--'}</td>
+      <td>
+        <button class="btn btn-danger" onclick="deleteHolding(${items.map(i=>i.id).join(',')})">刪除</button>
+      </td>
+    </tr>`;
+  }
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>投入成本</th>
+          <th>現價</th>
+          <th>現值</th>
+          <th>總投報率</th>
+          <th>年化(CAGR)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  // 更新 summary cards
+  const totalPnl = totalAssetTWD - totalCostTWD;
+  const totalPnlPct = totalCostTWD > 0 ? (totalPnl / totalCostTWD) * 100 : 0;
+
+  document.getElementById('totalAsset').textContent = `NT$${fmt(totalAssetTWD)}`;
+  document.getElementById('totalAssetSub').textContent = `台幣計價合計`;
+  document.getElementById('totalCost').textContent = `NT$${fmt(totalCostTWD)}`;
+  document.getElementById('totalPnl').textContent = `NT$${fmt(totalPnl)}`;
+  document.getElementById('totalPnl').className = `card-value ${fmtClass(totalPnl)}`;
+  document.getElementById('totalPnlPct').textContent = `投報率 ${fmtPct(totalPnlPct)}`;
+
+  return totalAssetTWD;
+}
+
+// ── 折線圖 ──────────────────────────────────────────
+function renderChart() {
+  const canvas = document.getElementById('assetChart');
+  const empty = document.getElementById('chartEmpty');
+
+  if (!snapshots.length) {
+    canvas.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  const labels = snapshots.map(s => s.date);
+  const values = snapshots.map(s => parseFloat(s.total_twd));
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '總資產 (TWD)',
+        data: values,
+        borderColor: '#00e5ff',
+        backgroundColor: 'rgba(0,229,255,0.05)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#00e5ff',
+        pointBorderColor: '#0a0e1a',
+        pointBorderWidth: 2,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111827',
+          borderColor: '#1e2d45',
+          borderWidth: 1,
+          titleColor: '#64748b',
+          bodyColor: '#e2e8f0',
+          titleFont: { family: 'Space Mono', size: 11 },
+          bodyFont: { family: 'Space Mono', size: 12 },
+          callbacks: {
+            label: ctx => `NT$ ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(30,45,69,0.5)' },
+          ticks: { color: '#64748b', font: { family: 'Space Mono', size: 10 } }
+        },
+        y: {
+          grid: { color: 'rgba(30,45,69,0.5)' },
+          ticks: {
+            color: '#64748b',
+            font: { family: 'Space Mono', size: 10 },
+            callback: v => 'NT$' + fmt(v)
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── 新增持股 ────────────────────────────────────────
+function toggleAddForm() {
+  const f = document.getElementById('addForm');
+  f.classList.toggle('visible');
+  if (f.classList.contains('visible')) {
+    document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+  }
+}
+
+async function addHolding() {
+  const symbol = document.getElementById('f_symbol').value.trim().toUpperCase();
+  const currency = document.getElementById('f_currency').value;
+  const buy_date = document.getElementById('f_date').value;
+  const buy_price = document.getElementById('f_price').value;
+  const shares = document.getElementById('f_shares').value;
+  const note = document.getElementById('f_note').value;
+
+  if (!symbol || !buy_date || !buy_price || !shares) {
+    alert('請填寫代碼、日期、買入價格和股數');
+    return;
+  }
+
+  setStatus('loading', '新增持股中...');
+  try {
+    await apiCall({ action: 'addHolding', symbol, currency, buy_date, buy_price, shares, note });
+    toggleAddForm();
+    document.getElementById('f_symbol').value = '';
+    document.getElementById('f_price').value = '';
+    document.getElementById('f_shares').value = '';
+    document.getElementById('f_note').value = '';
+    await loadAndRender();
+  } catch(e) {
+    setStatus('error', '新增失敗: ' + e.message);
+  }
+}
+
+async function deleteHolding(...ids) {
+  if (!confirm('確定要刪除此持股？')) return;
+  setStatus('loading', '刪除中...');
+  try {
+    // 從最大 row 開始刪，避免 row index 錯位
+    const sorted = ids.map(Number).sort((a,b) => b - a);
+    for (const id of sorted) {
+      await apiCall({ action: 'deleteHolding', id });
+    }
+    await loadAndRender();
+  } catch(e) {
+    setStatus('error', '刪除失敗: ' + e.message);
+  }
+}
+
+// ── 主流程 ──────────────────────────────────────────
+async function loadAndRender() {
+  setStatus('loading', '載入持股清單...');
+
+  try {
+    const [holdingsRes, snapshotsRes] = await Promise.all([
+      apiCall({ action: 'getHoldings' }),
+      apiCall({ action: 'getSnapshots' })
+    ]);
+
+    holdings = holdingsRes.data || [];
+    snapshots = snapshotsRes.data || [];
+    log('DATA', `持股 ${holdings.length} 筆，快照 ${snapshots.length} 筆`, 'ok');
+
+  } catch(e) {
+    setStatus('error', 'Google Sheet 連線失敗');
+    document.getElementById('holdingsTable').innerHTML =
+      '<div class="empty-state">無法連線到 Google Sheet，請確認 API URL 與 Token 設定</div>';
+    return;
+  }
+
+  // 抓匯率
+  setStatus('loading', '抓取匯率中...');
+  usdRate = await fetchUSDRate();
+  document.getElementById('usdRate').textContent = usdRate ? usdRate.toFixed(2) : '--';
+
+  // 抓股價
+  setStatus('loading', '抓取股價中...');
+  const symbols = [...new Set(holdings.map(h => h.symbol))];
+  prices = {};
+  for (const h of holdings) {
+    if (!prices[h.symbol]) {
+      prices[h.symbol] = await fetchPrice(h.symbol, h.currency);
+    }
+  }
+
+  // 渲染
+  const totalAssetTWD = renderHoldings();
+  renderChart();
+
+  // 寫入快照
+  if (totalAssetTWD && totalAssetTWD > 0) {
+    const today = new Date().toISOString().slice(0,10);
+    try {
+      const res = await apiCall({
+        action: 'addSnapshot',
+        date: today,
+        total_twd: totalAssetTWD.toFixed(0),
+        usd_rate: (usdRate || 32.5).toFixed(2)
+      });
+      if (res.skipped) {
+        log('SNAPSHOT', `今日已記錄，略過`, 'info');
+      } else {
+        log('SNAPSHOT', `已記錄今日資產 NT$${fmt(totalAssetTWD)}`, 'ok');
+        // 重新抓快照更新圖表
+        const snap2 = await apiCall({ action: 'getSnapshots' });
+        snapshots = snap2.data || [];
+        renderChart();
+      }
+    } catch(e) {
+      log('SNAPSHOT', `寫入失敗: ${e.message}`, 'err');
+    }
+  }
+
+  setStatus('ok', `最後更新：${new Date().toLocaleString('zh-TW')}`);
+}
+
+// 啟動
+loadAndRender();
+</script>
+</body>
+</html>
