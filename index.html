@@ -201,7 +201,7 @@ canvas { width:100% !important; height:160px !important; }
     <div class="header-right">
       <div class="rate-display">USD <span id="usdRate">--</span></div>
       <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="隱藏金額">👁</button>
-      <div class="version-badge">v1.08</div>
+      <div class="version-badge">v1.09</div>
     </div>
   </div>
 
@@ -611,7 +611,7 @@ function renderHoldingsContainer() {
             <div class="detail-grid">
               <div class="detail-item">
                 <label>持股股數</label>
-                <div class="val">${fmt(totalShares,2)} 股</div>
+                <div class="val">${maskAmt(fmt(totalShares,2)+' 股')}</div>
               </div>
               <div class="detail-item">
                 <label>平均買入價</label>
@@ -698,7 +698,7 @@ function renderTransactions(container) {
         <span class="tx-date">${tx.sell_date||'--'}</span>
       </div>
       <div class="tx-bottom">
-        <span>${fmt(parseFloat(tx.shares),2)}股</span>
+        <span>${maskAmt(fmt(parseFloat(tx.shares),2)+'股')}</span>
         <span>買${ccy}${fmt(parseFloat(tx.buy_price),2)}</span>
         <span>賣${ccy}${fmt(parseFloat(tx.sell_price),2)}</span>
         <span class="tx-pnl ${cls(pnl)}">${maskAmt((pnl>=0?'+':'')+ccy+fmt(Math.abs(pnl),2))}</span>
