@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>StockLedger</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -21,118 +21,146 @@
   --mono: 'Space Mono', monospace;
   --sans: 'Noto Sans TC', sans-serif;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
 body { background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh; overflow-x:hidden; }
 body::before {
   content:''; position:fixed; inset:0;
-  background-image: linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px), linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);
+  background-image: linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px), linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px);
   background-size:40px 40px; pointer-events:none; z-index:0;
 }
-.container { max-width:1150px; margin:0 auto; padding:24px 20px; position:relative; z-index:1; }
+.container { max-width:800px; margin:0 auto; padding:16px; position:relative; z-index:1; }
 
 /* Header */
-.header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid var(--border); }
-.header-left h1 { font-family:var(--mono); font-size:20px; color:var(--accent); letter-spacing:3px; }
-.header-left .subtitle { font-size:11px; color:var(--text-dim); margin-top:4px; font-family:var(--mono); }
-.header-right { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-.version-badge { font-family:var(--mono); font-size:11px; color:var(--text-dim); border:1px solid var(--border); padding:3px 8px; border-radius:3px; }
-.rate-display { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.header-left h1 { font-family:var(--mono); font-size:16px; color:var(--accent); letter-spacing:3px; }
+.header-left .subtitle { font-size:10px; color:var(--text-dim); margin-top:3px; font-family:var(--mono); }
+.header-right { display:flex; align-items:center; gap:10px; }
+.version-badge { font-family:var(--mono); font-size:10px; color:var(--text-muted); border:1px solid var(--border); padding:2px 6px; border-radius:3px; }
+.rate-display { font-family:var(--mono); font-size:11px; color:var(--text-dim); }
 .rate-display span { color:var(--accent); font-weight:700; }
+.eye-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:4px 8px; cursor:pointer; font-size:14px; color:var(--text-dim); transition:all 0.15s; }
+.eye-btn:hover { border-color:var(--accent); color:var(--accent); }
 
 /* Status */
-.status-bar { display:flex; align-items:center; gap:8px; margin-bottom:20px; font-family:var(--mono); font-size:11px; color:var(--text-dim); }
-.status-dot { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
+.status-bar { display:flex; align-items:center; gap:8px; margin-bottom:16px; font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--text-muted); flex-shrink:0; }
 .status-dot.loading { background:#ff6b35; animation:pulse 1s infinite; }
 .status-dot.ok { background:var(--green); }
 .status-dot.error { background:var(--red); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* Summary */
-.summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
-.card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 18px; position:relative; overflow:hidden; }
+/* Summary cards */
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; position:relative; overflow:hidden; }
 .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
 .card.realized::before { background:linear-gradient(90deg,var(--yellow),transparent); }
-.card-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; font-family:var(--mono); }
-.card-value { font-family:var(--mono); font-size:18px; font-weight:700; }
+.card-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; font-family:var(--mono); }
+.card-value { font-family:var(--mono); font-size:15px; font-weight:700; }
 .card-value.positive { color:var(--green); }
 .card-value.negative { color:var(--red); }
 .card-value.neutral { color:var(--text); }
-.card-sub { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:var(--mono); }
-
-/* Section */
-.section { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:24px; }
-.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
-.section-title { font-family:var(--mono); font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; }
+.card-sub { font-size:10px; color:var(--text-dim); margin-top:3px; font-family:var(--mono); }
 
 /* Chart */
-canvas { width:100% !important; height:200px !important; }
-.chart-empty { height:200px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px; font-family:var(--mono); border:1px dashed var(--border); border-radius:6px; }
+.section { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
+.section-title { font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
+canvas { width:100% !important; height:160px !important; }
+.chart-empty { height:160px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:11px; font-family:var(--mono); border:1px dashed var(--border); border-radius:6px; text-align:center; padding:16px; }
+
+/* Tabs */
+.tabs-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.tabs { display:flex; gap:2px; }
+.tab { font-family:var(--mono); font-size:10px; color:var(--text-dim); padding:5px 10px; cursor:pointer; letter-spacing:1px; border-bottom:2px solid transparent; transition:all 0.15s; text-transform:uppercase; }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
 /* Buttons */
-.btn { font-family:var(--mono); font-size:11px; padding:6px 12px; border-radius:4px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; letter-spacing:1px; transition:all 0.15s; white-space:nowrap; }
+.btn { font-family:var(--mono); font-size:10px; padding:6px 10px; border-radius:4px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; letter-spacing:1px; transition:all 0.15s; white-space:nowrap; }
 .btn:hover { background:var(--accent); color:var(--bg); }
+.btn:active { opacity:0.8; }
 .btn-danger { border-color:var(--red); color:var(--red); }
 .btn-danger:hover { background:var(--red); color:white; }
 .btn-warn { border-color:var(--yellow); color:var(--yellow); }
 .btn-warn:hover { background:var(--yellow); color:var(--bg); }
 .btn-sm { padding:4px 8px; font-size:10px; }
 
-/* Tabs */
-.tabs { display:flex; gap:2px; }
-.tab { font-family:var(--mono); font-size:11px; color:var(--text-dim); padding:6px 14px; cursor:pointer; letter-spacing:1px; border-bottom:2px solid transparent; transition:all 0.15s; text-transform:uppercase; }
-.tab:hover { color:var(--text); }
-.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-
-/* Account group */
-.account-group { margin-bottom:24px; }
-.account-group:last-child { margin-bottom:0; }
+/* Account row */
+.account-row {
+  background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  margin-bottom:8px; overflow:hidden;
+}
 .account-header {
   display:flex; align-items:center; gap:10px;
-  padding:8px 10px; margin-bottom:8px;
-  background:var(--surface2); border-radius:6px;
+  padding:12px 14px; cursor:pointer; user-select:none;
   border-left:3px solid var(--accent);
+  transition: background 0.1s;
 }
-.account-name { font-family:var(--mono); font-size:12px; color:var(--accent); font-weight:700; letter-spacing:1px; }
-.account-summary { font-family:var(--mono); font-size:10px; color:var(--text-dim); margin-left:auto; }
-.account-pnl { font-family:var(--mono); font-size:11px; font-weight:700; }
+.account-header:active { background:var(--surface2); }
+.account-chevron { font-size:10px; color:var(--text-muted); transition:transform 0.2s; margin-right:2px; }
+.account-chevron.open { transform:rotate(90deg); }
+.account-name { font-family:var(--mono); font-size:12px; font-weight:700; flex:1; }
+.account-meta { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.account-asset { font-family:var(--mono); font-size:11px; color:var(--text); }
+.account-cost { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+.account-pnl { font-family:var(--mono); font-size:12px; font-weight:700; }
+.account-body { display:none; border-top:1px solid var(--border); }
+.account-body.open { display:block; }
 
-/* Table */
-table { width:100%; border-collapse:collapse; font-size:12px; }
-th { font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
-th:first-child { text-align:left; }
-td { padding:10px 10px; text-align:right; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:12px; color:var(--text); }
-td:first-child { text-align:left; }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:rgba(0,229,255,0.03); }
-.symbol-name { font-size:13px; font-weight:700; color:var(--accent); }
-.symbol-meta { font-size:10px; color:var(--text-dim); margin-top:2px; }
-.closed-badge { font-size:9px; background:var(--text-muted); color:var(--bg); padding:1px 5px; border-radius:2px; margin-left:6px; vertical-align:middle; }
-.positive { color:var(--green); }
-.negative { color:var(--red); }
-.na { color:var(--text-muted); }
-.empty-state { text-align:center; padding:36px; color:var(--text-muted); font-family:var(--mono); font-size:12px; }
-.action-btns { display:flex; gap:4px; justify-content:flex-end; }
+/* Stock row */
+.stock-item { border-bottom:1px solid var(--border); }
+.stock-item:last-child { border-bottom:none; }
+.stock-header {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; cursor:pointer; user-select:none;
+  transition: background 0.1s;
+}
+.stock-header:active { background:var(--surface2); }
+.stock-chevron { font-size:9px; color:var(--text-muted); transition:transform 0.2s; }
+.stock-chevron.open { transform:rotate(90deg); }
+.stock-symbol { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent); flex:1; }
+.stock-currency-badge { font-family:var(--mono); font-size:9px; color:var(--text-muted); background:var(--surface2); padding:1px 5px; border-radius:3px; }
+.closed-badge { font-size:9px; background:var(--text-muted); color:var(--bg); padding:1px 5px; border-radius:2px; }
+.stock-price { font-family:var(--mono); font-size:12px; color:var(--text); min-width:80px; text-align:right; }
+.stock-pnl { font-family:var(--mono); font-size:12px; font-weight:700; min-width:70px; text-align:right; }
+
+/* Stock detail */
+.stock-detail { display:none; padding:12px 14px 14px; background:var(--surface2); border-top:1px solid var(--border); }
+.stock-detail.open { display:block; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.detail-item label { display:block; font-family:var(--mono); font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+.detail-item .val { font-family:var(--mono); font-size:12px; color:var(--text); }
+.detail-item .val.positive { color:var(--green); }
+.detail-item .val.negative { color:var(--red); }
+.detail-actions { display:flex; gap:8px; margin-top:4px; }
 
 /* Add form */
-.add-form { display:none; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
+.add-form { display:none; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
 .add-form.visible { display:block; }
-.form-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
-.form-group label { display:block; font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
-.form-group input, .form-group select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:8px 10px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; transition:border-color 0.15s; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.form-group label { display:block; font-family:var(--mono); font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.form-group input, .form-group select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:8px 10px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; }
 .form-group input:focus, .form-group select:focus { border-color:var(--accent); }
 .form-group select option { background:var(--surface); }
-.form-actions { display:flex; gap:10px; }
+.form-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Transactions */
+.tx-item { padding:11px 14px; border-bottom:1px solid var(--border); }
+.tx-item:last-child { border-bottom:none; }
+.tx-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.tx-symbol { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent); }
+.tx-acct { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+.tx-date { font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-left:auto; }
+.tx-bottom { display:flex; gap:12px; font-family:var(--mono); font-size:11px; color:var(--text-dim); }
+.tx-pnl { font-weight:700; }
 
 /* Debug */
-.debug-section { margin-bottom:24px; }
-.debug-toggle { font-family:var(--mono); font-size:11px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:6px; user-select:none; letter-spacing:1px; }
-.debug-toggle:hover { color:var(--text-dim); }
-.debug-panel { display:none; background:#060a10; border:1px solid var(--border); border-radius:6px; padding:16px; margin-top:10px; max-height:280px; overflow-y:auto; }
+.debug-section { margin-bottom:16px; }
+.debug-toggle { font-family:var(--mono); font-size:10px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:6px; user-select:none; }
+.debug-panel { display:none; background:#060a10; border:1px solid var(--border); border-radius:6px; padding:12px; margin-top:8px; max-height:200px; overflow-y:auto; }
 .debug-panel.visible { display:block; }
-.debug-line { font-family:var(--mono); font-size:11px; padding:3px 0; border-bottom:1px solid var(--border); display:flex; gap:12px; }
+.debug-line { font-family:var(--mono); font-size:10px; padding:2px 0; border-bottom:1px solid var(--border); display:flex; gap:8px; }
 .debug-line:last-child { border-bottom:none; }
-.debug-time { color:var(--text-muted); min-width:80px; }
-.debug-tag { min-width:100px; }
+.debug-time { color:var(--text-muted); min-width:70px; flex-shrink:0; }
+.debug-tag { min-width:90px; flex-shrink:0; }
 .debug-tag.ok { color:var(--green); }
 .debug-tag.err { color:var(--red); }
 .debug-tag.info { color:var(--accent); }
@@ -140,28 +168,26 @@ tr:hover td { background:rgba(0,229,255,0.03); }
 .debug-msg { color:var(--text-dim); word-break:break-all; }
 
 /* Modal */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.92); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.92); z-index:200; align-items:flex-end; justify-content:center; }
 .modal-overlay.visible { display:flex; }
-.modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; width:90%; max-width:440px; }
-.modal h2 { font-family:var(--mono); font-size:13px; color:var(--accent); letter-spacing:2px; margin-bottom:6px; }
-.modal .modal-sub { font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-bottom:24px; }
-.mform-group { margin-bottom:16px; }
-.mform-group label { display:block; font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-bottom:5px; text-transform:uppercase; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:12px 12px 0 0; padding:24px; width:100%; max-width:500px; }
+.modal h2 { font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:2px; margin-bottom:4px; }
+.modal .modal-sub { font-family:var(--mono); font-size:11px; color:var(--text-dim); margin-bottom:20px; }
+.mform-group { margin-bottom:14px; }
+.mform-group label { display:block; font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-bottom:4px; text-transform:uppercase; }
 .mform-group input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:10px 12px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; }
 .mform-group input:focus { border-color:var(--accent); }
-.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.modal-actions { display:flex; gap:8px; margin-top:16px; }
 
 /* Setup */
-.setup-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.97); z-index:300; align-items:center; justify-content:center; }
+.setup-overlay { display:none; position:fixed; inset:0; background:rgba(10,14,26,0.97); z-index:300; align-items:center; justify-content:center; padding:16px; }
 .setup-overlay.visible { display:flex; }
+.setup-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:100%; max-width:400px; }
 
-@media (max-width:700px) {
-  .summary-grid { grid-template-columns:1fr 1fr; }
-  .form-grid { grid-template-columns:1fr 1fr; }
-  .header { flex-direction:column; align-items:flex-start; gap:10px; }
-  table { font-size:11px; }
-  td, th { padding:7px 6px; }
-}
+.empty-state { text-align:center; padding:28px; color:var(--text-muted); font-family:var(--mono); font-size:11px; }
+.footer-link { text-align:center; padding:8px 0 20px; }
+.footer-link span { font-family:var(--mono); font-size:10px; color:var(--text-muted); cursor:pointer; letter-spacing:1px; }
+.footer-link span:hover { color:var(--text-dim); }
 </style>
 </head>
 <body>
@@ -170,11 +196,12 @@ tr:hover td { background:rgba(0,229,255,0.03); }
   <div class="header">
     <div class="header-left">
       <h1>STOCK LEDGER</h1>
-      <div class="subtitle">個人股票資產追蹤系統</div>
+      <div class="subtitle">個人股票資產追蹤</div>
     </div>
     <div class="header-right">
-      <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
-      <div class="version-badge">v1.06</div>
+      <div class="rate-display">USD <span id="usdRate">--</span></div>
+      <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="隱藏金額">👁</button>
+      <div class="version-badge">v1.08</div>
     </div>
   </div>
 
@@ -193,45 +220,43 @@ tr:hover td { background:rgba(0,229,255,0.03); }
     <div class="card">
       <div class="card-label">總投入成本</div>
       <div class="card-value neutral" id="totalCost">--</div>
-      <div class="card-sub">現持倉成本合計</div>
+      <div class="card-sub">現持倉成本</div>
     </div>
     <div class="card">
       <div class="card-label">未實現損益</div>
       <div class="card-value neutral" id="unrealizedPnl">--</div>
-      <div class="card-sub" id="unrealizedPct">市值 - 成本</div>
+      <div class="card-sub" id="unrealizedPct">--</div>
     </div>
     <div class="card realized">
       <div class="card-label">已實現損益</div>
       <div class="card-value neutral" id="realizedPnl">--</div>
-      <div class="card-sub" id="realizedSub">歷史平倉合計</div>
+      <div class="card-sub" id="realizedSub">--</div>
     </div>
   </div>
 
   <!-- Chart -->
   <div class="section">
     <div class="section-title">▸ 總資產歷史走勢（台幣）</div>
-    <div style="margin-top:12px;">
-      <div class="chart-empty" id="chartEmpty">資料累積中，每次開啟自動記錄節點</div>
-      <canvas id="assetChart" style="display:none"></canvas>
-    </div>
+    <div class="chart-empty" id="chartEmpty">資料累積中，每次開啟自動記錄節點</div>
+    <canvas id="assetChart" style="display:none"></canvas>
   </div>
 
   <!-- Holdings -->
-  <div class="section">
-    <div class="section-header">
+  <div>
+    <div class="tabs-bar">
       <div class="tabs">
         <div class="tab active" onclick="switchTab('active')">持倉中</div>
         <div class="tab" onclick="switchTab('closed')">已平倉</div>
         <div class="tab" onclick="switchTab('transactions')">交易紀錄</div>
       </div>
-      <button class="btn" onclick="toggleAddForm()">＋ 新增持股</button>
+      <button class="btn" onclick="toggleAddForm()">＋ 新增</button>
     </div>
 
     <div class="add-form" id="addForm">
       <div class="form-grid">
         <div class="form-group">
           <label>股票代碼</label>
-          <input type="text" id="f_symbol" placeholder="2330 / 00662 / QQQM" style="text-transform:uppercase;">
+          <input type="text" id="f_symbol" placeholder="2330 / 00662" style="text-transform:uppercase;">
         </div>
         <div class="form-group">
           <label>市場</label>
@@ -269,17 +294,17 @@ tr:hover td { background:rgba(0,229,255,0.03); }
       </div>
     </div>
 
-    <div id="holdingsTable"></div>
+    <div id="holdingsContainer"></div>
   </div>
 
   <!-- Debug -->
-  <div class="debug-section">
+  <div class="debug-section" style="margin-top:16px;">
     <div class="debug-toggle" onclick="toggleDebug()"><span id="debugArrow">▶</span> DEBUG LOG</div>
     <div class="debug-panel" id="debugPanel"></div>
   </div>
 
-  <div style="text-align:center;padding:8px 0 24px;">
-    <span onclick="showSetup()" style="font-family:var(--mono);font-size:10px;color:var(--text-muted);cursor:pointer;letter-spacing:1px;" onmouseover="this.style.color='var(--text-dim)'" onmouseout="this.style.color='var(--text-muted)'">⚙ 修改連線設定</span>
+  <div class="footer-link">
+    <span onclick="showSetup()">⚙ 修改連線設定</span>
   </div>
 </div>
 
@@ -311,15 +336,15 @@ tr:hover td { background:rgba(0,229,255,0.03); }
 
 <!-- Setup -->
 <div class="setup-overlay" id="setupOverlay">
-  <div class="modal" style="max-width:480px;">
-    <h2>STOCK LEDGER</h2>
-    <div class="modal-sub">請輸入存取 Token，儲存後不需再次輸入</div>
-    <div class="mform-group" style="margin-bottom:24px;">
+  <div class="setup-box">
+    <div style="font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:4px;">STOCK LEDGER</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:20px;">請輸入存取 Token</div>
+    <div class="mform-group" style="margin-bottom:20px;">
       <label>TOKEN</label>
       <input id="setup_token" type="password" placeholder="你設定的 secret token">
     </div>
-    <button onclick="saveSetup()" style="width:100%;font-family:var(--mono);font-size:12px;padding:12px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--bg);cursor:pointer;letter-spacing:1px;font-weight:700;">確認連線</button>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:12px;text-align:center;">Token 只存在此瀏覽器，換裝置需重新輸入</div>
+    <button onclick="saveSetup()" style="width:100%;font-family:var(--mono);font-size:12px;padding:11px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--bg);cursor:pointer;letter-spacing:1px;font-weight:700;">確認連線</button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:10px;text-align:center;">Token 存在本機瀏覽器，換裝置需重新輸入</div>
   </div>
 </div>
 
@@ -332,6 +357,24 @@ let holdings = [], transactions = [], snapshots = [];
 let prices = {}, lastPrices = {}, lastPricesWithDate = {};
 let usdRate = null, chartInstance = null, currentTab = 'active';
 let pendingSell = null, manualPriceResolve = null, isLoading = false;
+let eyeOpen = true; // true = 顯示金額, false = 隱藏
+// 帳戶展開狀態
+let accountOpen = {};
+// 股票展開狀態
+let stockOpen = {};
+
+// ── 眼睛開關 ────────────────────────────────────────
+function toggleEye() {
+  eyeOpen = !eyeOpen;
+  document.getElementById('eyeBtn').textContent = eyeOpen ? '👁' : '🙈';
+  renderSummary();
+  renderHoldingsContainer();
+}
+
+function maskAmt(val, forceShow) {
+  if (eyeOpen || forceShow) return val;
+  return '****';
+}
 
 // ── Debug ──────────────────────────────────────────
 function log(tag, msg, level='info') {
@@ -372,7 +415,7 @@ async function apiCall(params) {
   }
 }
 
-// ── 股價抓取（每日只抓一次）────────────────────────────
+// ── 股價抓取 ────────────────────────────────────────
 async function fetchAllPrices(holdingsList) {
   const today = new Date().toISOString().slice(0,10);
   const symbolMap = {};
@@ -382,7 +425,7 @@ async function fetchAllPrices(holdingsList) {
     let ticker;
     if (h.currency === 'TWD') ticker = h.symbol + '.TW';
     else if (h.currency === 'TWO') ticker = h.symbol + '.TWO';
-    else ticker = h.symbol; // USD
+    else ticker = h.symbol;
     if (!symbolMap[ticker]) symbolMap[ticker] = { symbol: h.symbol, currency: h.currency };
   }
 
@@ -397,10 +440,7 @@ async function fetchAllPrices(holdingsList) {
     }
   }
 
-  if (!needFetch.length) {
-    log('PRICE', '所有股票均有今日快取，略過抓取');
-    return;
-  }
+  if (!needFetch.length) { log('PRICE', '所有今日快取，略過'); return; }
 
   log('PRICE', `批次抓取: ${needFetch.join(', ')}`);
   try {
@@ -414,15 +454,11 @@ async function fetchAllPrices(holdingsList) {
         log('PRICE', `${ticker} = ${result.price}`, 'ok');
       } else {
         log('PRICE', `${ticker} 失敗: ${result.error}`, 'warn');
-        if (lastPrices[sym]) {
-          prices[sym] = lastPrices[sym];
-          log('PRICE', `${ticker} 用舊快取 ${lastPrices[sym]}`, 'warn');
-        } else {
+        if (lastPrices[sym]) { prices[sym] = lastPrices[sym]; log('PRICE', `${ticker} 用舊快取`, 'warn'); }
+        else {
           const manual = await askManualPrice(sym, symbolMap[ticker].currency);
           prices[sym] = (manual && manual > 0) ? manual : null;
-          if (prices[sym]) {
-            try { await apiCall({ action:'setLastPrice', symbol:sym, price:prices[sym] }); } catch(_){}
-          }
+          if (prices[sym]) { try { await apiCall({action:'setLastPrice',symbol:sym,price:prices[sym]}); } catch(_){} }
         }
       }
     }
@@ -431,13 +467,8 @@ async function fetchAllPrices(holdingsList) {
     for (const [ticker, meta] of Object.entries(symbolMap)) {
       const sym = meta.symbol;
       if (prices[sym] !== undefined) continue;
-      if (lastPrices[sym]) {
-        prices[sym] = lastPrices[sym];
-        log('PRICE', `${ticker} fallback 舊快取`, 'warn');
-      } else {
-        const manual = await askManualPrice(sym, meta.currency);
-        prices[sym] = (manual && manual > 0) ? manual : null;
-      }
+      if (lastPrices[sym]) { prices[sym] = lastPrices[sym]; }
+      else { const manual = await askManualPrice(sym, meta.currency); prices[sym] = (manual && manual > 0) ? manual : null; }
     }
   }
 }
@@ -448,17 +479,14 @@ async function fetchUSDRate() {
     const res = await apiCall({ action: 'getUSDRate' });
     if (res.rate) { log('FX', `USD/TWD = ${res.rate}`, 'ok'); return res.rate; }
     throw new Error(res.error || '無回傳');
-  } catch(e) {
-    log('FX', `失敗，使用預設值 32.5`, 'warn');
-    return 32.5;
-  }
+  } catch(e) { log('FX', `失敗，使用預設值 32.5`, 'warn'); return 32.5; }
 }
 
 // ── 手動股價 Modal ──────────────────────────────────
 function askManualPrice(symbol, currency) {
   return new Promise(resolve => {
     manualPriceResolve = resolve;
-    const ccy = currency === 'TWD' ? 'NT$' : '$';
+    const ccy = currency === 'USD' ? '$' : 'NT$';
     document.getElementById('priceModalSub').textContent = `${symbol} 無法自動取得，請輸入當前股價（${ccy}）`;
     document.getElementById('manual_price').value = '';
     document.getElementById('priceModal').classList.add('visible');
@@ -477,12 +505,14 @@ function calcCAGR(cost, val, yrs) { return (yrs < 0.01 || cost <= 0) ? null : (M
 function fmt(n, d=0) { if (n==null||isNaN(n)) return '--'; return n.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d}); }
 function fmtPct(n) { if (n==null||isNaN(n)) return '--'; return (n>=0?'+':'')+n.toFixed(2)+'%'; }
 function cls(n) { return n==null?'':n>=0?'positive':'negative'; }
+function toTWD(amount, currency) { return currency==='USD' ? amount*(usdRate||32.5) : amount; }
+function ccySymbol(currency) { return currency==='USD' ? '$' : 'NT$'; }
 
 // ── Tabs ────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['active','closed','transactions'][i]===tab));
-  renderHoldingsTable();
+  renderHoldingsContainer();
 }
 
 // ── 帳戶顏色 ────────────────────────────────────────
@@ -491,16 +521,13 @@ const accountColorMap = {};
 let colorIdx = 0;
 function getAccountColor(account) {
   const key = account || '未分類';
-  if (!accountColorMap[key]) {
-    accountColorMap[key] = ACCOUNT_COLORS[colorIdx % ACCOUNT_COLORS.length];
-    colorIdx++;
-  }
+  if (!accountColorMap[key]) { accountColorMap[key] = ACCOUNT_COLORS[colorIdx % ACCOUNT_COLORS.length]; colorIdx++; }
   return accountColorMap[key];
 }
 
-// ── 持股表格 ────────────────────────────────────────
-function renderHoldingsTable() {
-  const container = document.getElementById('holdingsTable');
+// ── 主渲染 ───────────────────────────────────────────
+function renderHoldingsContainer() {
+  const container = document.getElementById('holdingsContainer');
   if (currentTab === 'transactions') { renderTransactions(container); return; }
 
   const isClosed = currentTab === 'closed';
@@ -517,150 +544,202 @@ function renderHoldingsTable() {
   // 依帳戶分組
   const accountGroups = {};
   for (const h of filtered) {
-    const acct = String(h.account || '').trim() || '未分類';
+    const acct = String(h.account||'').trim() || '未分類';
     if (!accountGroups[acct]) accountGroups[acct] = [];
     accountGroups[acct].push(h);
   }
 
   let html = '';
   for (const [account, items] of Object.entries(accountGroups)) {
-    // 依 symbol 再分組
+    const color = getAccountColor(account);
+    const isAcctOpen = accountOpen[account] !== false; // 預設展開
+
+    // 依 symbol 分組
     const symbolGroups = {};
     for (const h of items) {
       if (!symbolGroups[h.symbol]) symbolGroups[h.symbol] = [];
       symbolGroups[h.symbol].push(h);
     }
 
-    let acctAssetTWD = 0, acctCostTWD = 0;
-    let rows = '';
+    // 計算帳戶總計
+    let acctAsset = 0, acctCost = 0;
+    for (const [sym, sItems] of Object.entries(symbolGroups)) {
+      const cur = sItems[0].currency;
+      const p = prices[sym];
+      const shares = sItems.reduce((s,i)=>s+parseFloat(i.shares||0),0);
+      const cost = sItems.reduce((s,i)=>s+parseFloat(i.buy_price||0)*parseFloat(i.shares||0),0);
+      acctCost += toTWD(cost, cur);
+      if (p!=null) acctAsset += toTWD(p*shares, cur);
+    }
+    const acctPnl = acctAsset - acctCost;
+    const acctPnlPct = acctCost > 0 ? (acctPnl/acctCost)*100 : 0;
 
+    // 股票列
+    let stockRows = '';
     for (const [symbol, sItems] of Object.entries(symbolGroups)) {
-      const currency = sItems[0].currency;
-      const ccy = currency === 'USD' ? '$' : 'NT$';
-      const currentPrice = prices[symbol];
-      const totalShares = sItems.reduce((s,i) => s + parseFloat(i.shares||0), 0);
-      const totalCost = sItems.reduce((s,i) => s + parseFloat(i.buy_price||0)*parseFloat(i.shares||0), 0);
-      const currentValue = currentPrice != null ? currentPrice * totalShares : null;
+      const cur = sItems[0].currency;
+      const ccy = ccySymbol(cur);
+      const p = prices[symbol];
+      const totalShares = sItems.reduce((s,i)=>s+parseFloat(i.shares||0),0);
+      const totalCost = sItems.reduce((s,i)=>s+parseFloat(i.buy_price||0)*parseFloat(i.shares||0),0);
+      const avgPrice = totalCost / totalShares;
+      const currentValue = p != null ? p * totalShares : null;
       const unrealizedPnl = currentValue != null ? currentValue - totalCost : null;
       const unrealizedPct = unrealizedPnl != null ? (unrealizedPnl/totalCost)*100 : null;
-      const earliestDate = sItems.reduce((d,i) => String(i.buy_date)<d ? String(i.buy_date) : d, String(sItems[0].buy_date));
+      const earliestDate = sItems.reduce((d,i)=>String(i.buy_date)<d?String(i.buy_date):d, String(sItems[0].buy_date));
       const years = calcYears(earliestDate);
-      const costTWD = currency==='USD' ? totalCost*(usdRate||32.5) : totalCost;
-      const valueTWD = currentValue!=null ? (currency==='USD' ? currentValue*(usdRate||32.5) : currentValue) : null;
-      // Note: TWO is also TWD-denominated
+      const costTWD = toTWD(totalCost, cur);
+      const valueTWD = currentValue!=null ? toTWD(currentValue, cur) : null;
       const cagr = valueTWD!=null ? calcCAGR(costTWD, valueTWD, years) : null;
-      const sold = sItems[0].sell_date && String(sItems[0].sell_date).trim() !== '';
-      const ids = sItems.map(i => i.id).join(',');
+      const sold = sItems[0].sell_date && String(sItems[0].sell_date).trim()!=='';
+      const ids = sItems.map(i=>i.id).join(',');
+      const stockKey = `${account}__${symbol}`;
+      const isStockOpen = stockOpen[stockKey] === true;
+      const curLabel = cur==='TWO'?'TWD(櫃)':cur;
 
-      acctCostTWD += costTWD;
-      if (valueTWD != null) acctAssetTWD += valueTWD;
-
-      rows += `<tr>
-        <td>
-          <div class="symbol-name">${symbol}${sold?'<span class="closed-badge">平倉</span>':''}</div>
-          <div class="symbol-meta">${currency==='TWO'?'TWD(櫃)':currency} · ${fmt(totalShares,2)} 股</div>
-        </td>
-        <td>${ccy}${fmt(totalCost,2)}</td>
-        <td>${currentPrice!=null ? ccy+fmt(currentPrice,2) : '<span class="na">--</span>'}</td>
-        <td>${currentValue!=null ? ccy+fmt(currentValue,2) : '<span class="na">--</span>'}</td>
-        <td class="${cls(unrealizedPct)}">${fmtPct(unrealizedPct)}</td>
-        <td class="${cls(cagr)}">${fmtPct(cagr)}</td>
-        <td>
-          <div class="action-btns">
-            ${!sold ? `<button class="btn btn-warn btn-sm" onclick="openSellModal('${symbol}','${ids}','${currency}')">平倉</button>` : ''}
-            <button class="btn btn-danger btn-sm" onclick="confirmDelete('${ids}','${symbol}')">刪除</button>
+      stockRows += `
+        <div class="stock-item">
+          <div class="stock-header" onclick="toggleStock('${stockKey}')">
+            <span class="stock-chevron ${isStockOpen?'open':''}">▶</span>
+            <span class="stock-symbol">${symbol}</span>
+            <span class="stock-currency-badge">${curLabel}</span>
+            ${sold?'<span class="closed-badge">平倉</span>':''}
+            <span class="stock-price">${p!=null?ccy+fmt(p,2):'--'}</span>
+            <span class="stock-pnl ${cls(unrealizedPct)}">${fmtPct(unrealizedPct)}</span>
           </div>
-        </td>
-      </tr>`;
+          <div class="stock-detail ${isStockOpen?'open':''}" id="detail-${stockKey.replace(/[^a-zA-Z0-9]/g,'_')}">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>持股股數</label>
+                <div class="val">${fmt(totalShares,2)} 股</div>
+              </div>
+              <div class="detail-item">
+                <label>平均買入價</label>
+                <div class="val">${maskAmt(ccy+fmt(avgPrice,2))}</div>
+              </div>
+              <div class="detail-item">
+                <label>投入成本</label>
+                <div class="val">${maskAmt(ccy+fmt(totalCost,2))}</div>
+              </div>
+              <div class="detail-item">
+                <label>目前現值</label>
+                <div class="val">${currentValue!=null?maskAmt(ccy+fmt(currentValue,2)):'--'}</div>
+              </div>
+              <div class="detail-item">
+                <label>未實現損益</label>
+                <div class="val ${cls(unrealizedPnl)}">${unrealizedPnl!=null?maskAmt((unrealizedPnl>=0?'+':'')+ccy+fmt(Math.abs(unrealizedPnl),2)):'--'}</div>
+              </div>
+              <div class="detail-item">
+                <label>年化報酬(CAGR)</label>
+                <div class="val ${cls(cagr)}">${fmtPct(cagr)}</div>
+              </div>
+              <div class="detail-item">
+                <label>最早買入日</label>
+                <div class="val" style="font-size:11px;">${earliestDate}</div>
+              </div>
+              <div class="detail-item">
+                <label>帳戶</label>
+                <div class="val" style="color:${color};font-size:11px;">${account}</div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              ${!sold?`<button class="btn btn-warn btn-sm" onclick="openSellModal('${symbol}','${ids}','${cur}')">平倉</button>`:''}
+              <button class="btn btn-danger btn-sm" onclick="confirmDelete('${ids}','${symbol}')">刪除</button>
+            </div>
+          </div>
+        </div>`;
     }
 
-    const acctPnl = acctAssetTWD - acctCostTWD;
-    const acctPnlPct = acctCostTWD > 0 ? (acctPnl/acctCostTWD)*100 : 0;
-    const color = getAccountColor(account);
-
-    html += `<div class="account-group">
-      <div class="account-header" style="border-left-color:${color}">
-        <span class="account-name" style="color:${color}">${account}</span>
-        <span class="account-summary">資產 NT$${fmt(acctAssetTWD)} ／ 成本 NT$${fmt(acctCostTWD)}</span>
-        <span class="account-pnl ${cls(acctPnl)}">${fmtPct(acctPnlPct)}</span>
-      </div>
-      <table>
-        <thead><tr>
-          <th>代碼</th><th>投入成本</th><th>現價</th><th>現值</th>
-          <th>未實現損益</th><th>年化(CAGR)</th><th></th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+    html += `
+      <div class="account-row">
+        <div class="account-header" style="border-left-color:${color}" onclick="toggleAccount('${account}')">
+          <span class="account-chevron ${isAcctOpen?'open':''}">▶</span>
+          <span class="account-name" style="color:${color}">${account}</span>
+          <div class="account-meta">
+            <span class="account-asset">${maskAmt('NT$'+fmt(acctAsset))}</span>
+            <span class="account-cost">成本 ${maskAmt('NT$'+fmt(acctCost))}</span>
+          </div>
+          <span class="account-pnl ${cls(acctPnl)}">${fmtPct(acctPnlPct)}</span>
+        </div>
+        <div class="account-body ${isAcctOpen?'open':''}" id="acct-${account.replace(/[^a-zA-Z0-9]/g,'_')}">
+          ${stockRows}
+        </div>
+      </div>`;
   }
 
   container.innerHTML = html;
 }
 
+function toggleAccount(account) {
+  accountOpen[account] = accountOpen[account] === false ? true : false;
+  renderHoldingsContainer();
+}
+
+function toggleStock(key) {
+  stockOpen[key] = !stockOpen[key];
+  renderHoldingsContainer();
+}
+
 function renderTransactions(container) {
   if (!transactions.length) { container.innerHTML = '<div class="empty-state">尚無交易紀錄</div>'; return; }
-  const rows = transactions.map(tx => {
-    const ccy = tx.currency==='USD'?'$':'NT$';
+  let html = '<div class="section" style="padding:0;">';
+  html += transactions.map(tx => {
+    const ccy = ccySymbol(tx.currency);
     const cost = parseFloat(tx.buy_price)*parseFloat(tx.shares);
     const proceeds = parseFloat(tx.sell_price)*parseFloat(tx.shares);
     const pnl = proceeds - cost;
     const pnlPct = (pnl/cost)*100;
     const acct = String(tx.account||'').trim() || '未分類';
     const color = getAccountColor(acct);
-    return `<tr>
-      <td>
-        <div class="symbol-name">${tx.symbol}</div>
-        <div class="symbol-meta" style="color:${color}">${acct} · ${tx.currency}</div>
-      </td>
-      <td>${fmt(parseFloat(tx.shares),2)}</td>
-      <td>${ccy}${fmt(parseFloat(tx.buy_price),2)}</td>
-      <td>${ccy}${fmt(parseFloat(tx.sell_price),2)}</td>
-      <td class="${cls(pnl)}">${ccy}${fmt(pnl,2)}</td>
-      <td class="${cls(pnlPct)}">${fmtPct(pnlPct)}</td>
-      <td style="color:var(--text-dim);font-size:10px;">${tx.sell_date||'--'}</td>
-    </tr>`;
+    return `<div class="tx-item">
+      <div class="tx-top">
+        <span class="tx-symbol">${tx.symbol}</span>
+        <span class="tx-acct" style="color:${color}">${acct}</span>
+        <span class="tx-date">${tx.sell_date||'--'}</span>
+      </div>
+      <div class="tx-bottom">
+        <span>${fmt(parseFloat(tx.shares),2)}股</span>
+        <span>買${ccy}${fmt(parseFloat(tx.buy_price),2)}</span>
+        <span>賣${ccy}${fmt(parseFloat(tx.sell_price),2)}</span>
+        <span class="tx-pnl ${cls(pnl)}">${maskAmt((pnl>=0?'+':'')+ccy+fmt(Math.abs(pnl),2))}</span>
+        <span class="${cls(pnlPct)}">${fmtPct(pnlPct)}</span>
+      </div>
+    </div>`;
   }).join('');
-  container.innerHTML = `<table><thead><tr>
-    <th>代碼</th><th>股數</th><th>買入價</th><th>賣出價</th><th>損益</th><th>報酬率</th><th>賣出日</th>
-  </tr></thead><tbody>${rows}</tbody></table>`;
+  html += '</div>';
+  container.innerHTML = html;
 }
 
-// ── Summary cards ───────────────────────────────────
+// ── Summary ─────────────────────────────────────────
 function renderSummary() {
-  let totalAssetTWD=0, totalCostTWD=0;
-  const active = holdings.filter(h => !h.sell_date || String(h.sell_date).trim()==='');
+  let totalAsset=0, totalCost=0;
+  const active = holdings.filter(h=>!h.sell_date||String(h.sell_date).trim()==='');
   const groups = {};
   for (const h of active) { if (!groups[h.symbol]) groups[h.symbol]=[]; groups[h.symbol].push(h); }
-  for (const [symbol, items] of Object.entries(groups)) {
-    const currency = items[0].currency;
-    const p = prices[symbol];
+  for (const [sym, items] of Object.entries(groups)) {
+    const cur = items[0].currency;
+    const p = prices[sym];
     const shares = items.reduce((s,i)=>s+parseFloat(i.shares||0),0);
     const cost = items.reduce((s,i)=>s+parseFloat(i.buy_price||0)*parseFloat(i.shares||0),0);
-    const costTWD = currency==='USD'?cost*(usdRate||32.5):cost;
-    totalCostTWD += costTWD;
-    if (p!=null) totalAssetTWD += currency==='USD'?p*shares*(usdRate||32.5):p*shares;
+    totalCost += toTWD(cost, cur);
+    if (p!=null) totalAsset += toTWD(p*shares, cur);
   }
-  const unrealized = totalAssetTWD - totalCostTWD;
-  const unrealizedPct = totalCostTWD>0?(unrealized/totalCostTWD)*100:0;
-  let realizedTWD = 0;
+  const unrealized = totalAsset - totalCost;
+  const unrealizedPct = totalCost>0?(unrealized/totalCost)*100:0;
+  let realized = 0;
   for (const tx of transactions) {
     const pnl = (parseFloat(tx.sell_price)-parseFloat(tx.buy_price))*parseFloat(tx.shares);
-    realizedTWD += tx.currency==='USD'?pnl*(usdRate||32.5):pnl;
+    realized += toTWD(pnl, tx.currency);
   }
 
-  const setCard = (id, val, n) => {
-    const el = document.getElementById(id);
-    el.textContent = val;
-    el.className = 'card-value ' + (n==null?'neutral':n>=0?'positive':'negative');
-  };
-
-  setCard('totalAsset', `NT$${fmt(totalAssetTWD)}`, null);
-  setCard('totalCost', `NT$${fmt(totalCostTWD)}`, null);
-  setCard('unrealizedPnl', `NT$${fmt(unrealized)}`, unrealized);
+  const setCard = (id, val, n) => { const el=document.getElementById(id); el.textContent=val; el.className='card-value '+(n==null?'neutral':n>=0?'positive':'negative'); };
+  setCard('totalAsset', maskAmt(`NT$${fmt(totalAsset)}`), null);
+  setCard('totalCost', maskAmt(`NT$${fmt(totalCost)}`), null);
+  setCard('unrealizedPnl', maskAmt(`NT$${fmt(unrealized)}`), unrealized);
   document.getElementById('unrealizedPct').textContent = fmtPct(unrealizedPct);
-  setCard('realizedPnl', `NT$${fmt(realizedTWD)}`, realizedTWD);
+  setCard('realizedPnl', maskAmt(`NT$${fmt(realized)}`), realized);
   document.getElementById('realizedSub').textContent = `${transactions.length} 筆交易`;
-  return totalAssetTWD;
+  return totalAsset;
 }
 
 // ── Chart ────────────────────────────────────────────
@@ -674,29 +753,25 @@ function renderChart() {
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(canvas, {
     type:'line',
-    data:{ labels, datasets:[{ data:values, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.06)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00e5ff', pointBorderColor:'#0a0e1a', pointBorderWidth:2, fill:true, tension:0.3 }] },
+    data:{ labels, datasets:[{ data:values, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.06)', borderWidth:2, pointRadius:3, pointBackgroundColor:'#00e5ff', pointBorderColor:'#0a0e1a', pointBorderWidth:2, fill:true, tension:0.3 }] },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1, titleColor:'#64748b', bodyColor:'#e2e8f0', titleFont:{family:'Space Mono',size:11}, bodyFont:{family:'Space Mono',size:12}, callbacks:{label:ctx=>`NT$ ${fmt(ctx.parsed.y)}`} } },
-      scales:{ x:{grid:{color:'rgba(30,45,69,0.5)'},ticks:{color:'#64748b',font:{family:'Space Mono',size:10}}}, y:{grid:{color:'rgba(30,45,69,0.5)'},ticks:{color:'#64748b',font:{family:'Space Mono',size:10},callback:v=>'NT$'+fmt(v)}} }
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#111827', borderColor:'#1e2d45', borderWidth:1, titleColor:'#64748b', bodyColor:'#e2e8f0', titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:11}, callbacks:{label:ctx=>`NT$ ${fmt(ctx.parsed.y)}`} } },
+      scales:{ x:{grid:{color:'rgba(30,45,69,0.5)'},ticks:{color:'#64748b',font:{family:'Space Mono',size:9}}}, y:{grid:{color:'rgba(30,45,69,0.5)'},ticks:{color:'#64748b',font:{family:'Space Mono',size:9},callback:v=>'NT$'+fmt(v)}} }
     }
   });
 }
 
-// ── 新增帳戶 autocomplete ────────────────────────────
+// ── 帳戶 autocomplete ────────────────────────────────
 function updateAccountList() {
-  const accounts = [...new Set(holdings.map(h => String(h.account||'').trim()).filter(Boolean))];
-  const dl = document.getElementById('accountList');
-  dl.innerHTML = accounts.map(a => `<option value="${a}">`).join('');
+  const accounts = [...new Set(holdings.map(h=>String(h.account||'').trim()).filter(Boolean))];
+  document.getElementById('accountList').innerHTML = accounts.map(a=>`<option value="${a}">`).join('');
 }
 
 // ── 新增持股 ────────────────────────────────────────
 function toggleAddForm() {
   const f = document.getElementById('addForm');
   f.classList.toggle('visible');
-  if (f.classList.contains('visible')) {
-    document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
-    updateAccountList();
-  }
+  if (f.classList.contains('visible')) { document.getElementById('f_date').value = new Date().toISOString().slice(0,10); updateAccountList(); }
 }
 
 async function addHolding() {
@@ -719,12 +794,10 @@ async function addHolding() {
 
 // ── 刪除 ────────────────────────────────────────────
 async function confirmDelete(ids, symbol) {
-  if (!confirm(`確定要刪除 ${symbol}？此操作不可復原，不會留下任何紀錄。`)) return;
+  if (!confirm(`確定要刪除 ${symbol}？此操作不可復原。`)) return;
   setStatus('loading','刪除中...');
-  try {
-    await apiCall({action:'deleteHolding', ids});
-    await loadAndRender();
-  } catch(e) { setStatus('error','刪除失敗: '+e.message); }
+  try { await apiCall({action:'deleteHolding',ids}); await loadAndRender(); }
+  catch(e) { setStatus('error','刪除失敗: '+e.message); }
 }
 
 // ── 賣出 ────────────────────────────────────────────
@@ -741,12 +814,9 @@ async function confirmSell() {
   const sell_date = document.getElementById('sell_date').value;
   const sell_price = document.getElementById('sell_price').value;
   if (!sell_date||!sell_price) { alert('請填寫賣出日期和價格'); return; }
-  closeSellModal();
-  setStatus('loading','平倉中...');
-  try {
-    await apiCall({action:'sellHolding',symbol:pendingSell.symbol,ids:pendingSell.ids,sell_date,sell_price});
-    await loadAndRender();
-  } catch(e) { setStatus('error','平倉失敗: '+e.message); }
+  closeSellModal(); setStatus('loading','平倉中...');
+  try { await apiCall({action:'sellHolding',symbol:pendingSell.symbol,ids:pendingSell.ids,sell_date,sell_price}); await loadAndRender(); }
+  catch(e) { setStatus('error','平倉失敗: '+e.message); }
 }
 
 // ── Setup ────────────────────────────────────────────
@@ -761,7 +831,7 @@ function saveSetup() {
 
 // ── 主流程 ──────────────────────────────────────────
 async function loadAndRender() {
-  if (isLoading) { log('SYS','已在載入中，略過重複呼叫','warn'); return; }
+  if (isLoading) { log('SYS','已在載入中，略過','warn'); return; }
   isLoading = true;
   setStatus('loading','載入資料中...');
 
@@ -781,42 +851,48 @@ async function loadAndRender() {
       const d = r.updated_at ? String(r.updated_at).slice(0,10) : '';
       lastPricesWithDate[r.symbol] = { price: parseFloat(r.price), date: d };
     });
-    log('DATA',`持倉 ${holdings.length}，交易 ${transactions.length}，快照 ${snapshots.length}，快取 ${Object.keys(lastPrices).length}`,'ok');
+    log('DATA',`持倉 ${holdings.length}，快取 ${Object.keys(lastPrices).length}`,'ok');
   } catch(e) {
     setStatus('error','Google Sheet 連線失敗');
-    document.getElementById('holdingsTable').innerHTML='<div class="empty-state">無法連線到 Google Sheet，請確認 Token 設定</div>';
+    document.getElementById('holdingsContainer').innerHTML='<div class="empty-state">無法連線到 Google Sheet，請確認 Token 設定</div>';
     isLoading = false; return;
   }
 
-  setStatus('loading','抓取匯率...');
+  // 第一階段：快取渲染
+  prices = {};
+  for (const [sym,p] of Object.entries(lastPrices)) prices[sym] = p;
+  if (!usdRate) usdRate = 32.5;
+  setStatus('loading','顯示快取，背景更新中...');
+  renderSummary();
+  renderHoldingsContainer();
+  renderChart();
+
+  // 第二階段：抓新資料
   usdRate = await fetchUSDRate();
   document.getElementById('usdRate').textContent = usdRate ? usdRate.toFixed(2) : '--';
 
-  setStatus('loading','抓取股價...');
-  prices = {};
+  setStatus('loading','更新股價中...');
   const active = holdings.filter(h=>!h.sell_date||String(h.sell_date).trim()==='');
   await fetchAllPrices(active);
 
-  // 更新 last_prices
-  for (const [sym, price] of Object.entries(prices)) {
+  for (const [sym,price] of Object.entries(prices)) {
     if (price!=null) { try { await apiCall({action:'setLastPrice',symbol:sym,price}); } catch(_){} }
   }
 
-  const totalAssetTWD = renderSummary();
-  renderHoldingsTable();
+  const totalAsset = renderSummary();
+  renderHoldingsContainer();
   renderChart();
 
-  if (totalAssetTWD > 0) {
+  if (totalAsset > 0) {
     const today = new Date().toISOString().slice(0,10);
     try {
-      const r = await apiCall({action:'addSnapshot',date:today,total_twd:totalAssetTWD.toFixed(0),usd_rate:(usdRate||32.5).toFixed(2)});
-      if (r.skipped) { log('SNAPSHOT','今日已記錄','info'); }
-      else {
-        log('SNAPSHOT',`NT$${fmt(totalAssetTWD)} 已記錄`,'ok');
+      const r = await apiCall({action:'addSnapshot',date:today,total_twd:totalAsset.toFixed(0),usd_rate:(usdRate||32.5).toFixed(2)});
+      if (!r.skipped) {
+        log('SNAPSHOT',`NT$${fmt(totalAsset)} 已記錄`,'ok');
         const s2 = await apiCall({action:'getSnapshots'});
         snapshots = s2.data||[]; renderChart();
-      }
-    } catch(e) { log('SNAPSHOT',`寫入失敗: ${e.message}`,'err'); }
+      } else { log('SNAPSHOT','今日已記錄','info'); }
+    } catch(e) { log('SNAPSHOT',`失敗: ${e.message}`,'err'); }
   }
 
   isLoading = false;
