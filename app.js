@@ -241,7 +241,8 @@ function renderSummary() {
     el.className = 'card-value ' + (n == null ? 'neutral' : n >= 0 ? 'positive' : 'negative');
   };
 
-  setCard('totalAsset', maskAmt(`NT$${fmt(totalAsset)}`), null);
+  const totalAssetWithCash = totalAsset + cashTWD;
+  setCard('totalAsset', maskAmt(`NT$${fmt(totalAssetWithCash)}`), null);
   setCard('totalCost', maskAmt(`NT$${fmt(totalCost)}`), null);
   setCard('unrealizedPnl', maskAmt(`NT$${fmt(unrealized)}`), unrealized);
   document.getElementById('unrealizedPct').textContent = fmtPct(unrealizedPct);
@@ -327,7 +328,7 @@ function renderLineChart() {
         tooltip: { backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1, titleColor: '#64748b', bodyColor: '#e2e8f0', titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 11 }, callbacks: { label: ctx => `NT$ ${fmt(ctx.parsed.y)}` } }
       },
       scales: {
-        x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 } } },
+        x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, callback: function(val, idx) { const s = this.getLabelForValue(val); return s ? s.slice(0,10) : ''; } } },
         y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, callback: v => 'NT$' + fmt(v) } }
       }
     }
