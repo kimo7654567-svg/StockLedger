@@ -174,7 +174,7 @@ tr:hover td { background:rgba(0,229,255,0.03); }
     </div>
     <div class="header-right">
       <div class="rate-display">USD/TWD <span id="usdRate">--</span></div>
-      <div class="version-badge">v1.05</div>
+      <div class="version-badge">v1.06</div>
     </div>
   </div>
 
@@ -236,7 +236,8 @@ tr:hover td { background:rgba(0,229,255,0.03); }
         <div class="form-group">
           <label>市場</label>
           <select id="f_currency">
-            <option value="TWD">台股（TWD）</option>
+            <option value="TWD">台股上市（.TW）</option>
+            <option value="TWO">台股上櫃（.TWO）</option>
             <option value="USD">美股（USD）</option>
           </select>
         </div>
@@ -378,7 +379,10 @@ async function fetchAllPrices(holdingsList) {
   const needFetch = [];
 
   for (const h of holdingsList) {
-    const ticker = h.currency === 'TWD' ? h.symbol + '.TW' : h.symbol;
+    let ticker;
+    if (h.currency === 'TWD') ticker = h.symbol + '.TW';
+    else if (h.currency === 'TWO') ticker = h.symbol + '.TWO';
+    else ticker = h.symbol; // USD
     if (!symbolMap[ticker]) symbolMap[ticker] = { symbol: h.symbol, currency: h.currency };
   }
 
@@ -532,7 +536,7 @@ function renderHoldingsTable() {
 
     for (const [symbol, sItems] of Object.entries(symbolGroups)) {
       const currency = sItems[0].currency;
-      const ccy = currency === 'TWD' ? 'NT$' : '$';
+      const ccy = currency === 'USD' ? '$' : 'NT$';
       const currentPrice = prices[symbol];
       const totalShares = sItems.reduce((s,i) => s + parseFloat(i.shares||0), 0);
       const totalCost = sItems.reduce((s,i) => s + parseFloat(i.buy_price||0)*parseFloat(i.shares||0), 0);
@@ -543,6 +547,7 @@ function renderHoldingsTable() {
       const years = calcYears(earliestDate);
       const costTWD = currency==='USD' ? totalCost*(usdRate||32.5) : totalCost;
       const valueTWD = currentValue!=null ? (currency==='USD' ? currentValue*(usdRate||32.5) : currentValue) : null;
+      // Note: TWO is also TWD-denominated
       const cagr = valueTWD!=null ? calcCAGR(costTWD, valueTWD, years) : null;
       const sold = sItems[0].sell_date && String(sItems[0].sell_date).trim() !== '';
       const ids = sItems.map(i => i.id).join(',');
@@ -553,7 +558,7 @@ function renderHoldingsTable() {
       rows += `<tr>
         <td>
           <div class="symbol-name">${symbol}${sold?'<span class="closed-badge">平倉</span>':''}</div>
-          <div class="symbol-meta">${currency} · ${fmt(totalShares,2)} 股</div>
+          <div class="symbol-meta">${currency==='TWO'?'TWD(櫃)':currency} · ${fmt(totalShares,2)} 股</div>
         </td>
         <td>${ccy}${fmt(totalCost,2)}</td>
         <td>${currentPrice!=null ? ccy+fmt(currentPrice,2) : '<span class="na">--</span>'}</td>
@@ -595,7 +600,7 @@ function renderHoldingsTable() {
 function renderTransactions(container) {
   if (!transactions.length) { container.innerHTML = '<div class="empty-state">尚無交易紀錄</div>'; return; }
   const rows = transactions.map(tx => {
-    const ccy = tx.currency==='TWD'?'NT$':'$';
+    const ccy = tx.currency==='USD'?'$':'NT$';
     const cost = parseFloat(tx.buy_price)*parseFloat(tx.shares);
     const proceeds = parseFloat(tx.sell_price)*parseFloat(tx.shares);
     const pnl = proceeds - cost;
