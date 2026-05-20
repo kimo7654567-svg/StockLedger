@@ -587,8 +587,11 @@ async function confirmSell() {
   const sell_date = document.getElementById('sell_date').value;
   const sell_price = document.getElementById('sell_price').value;
   if (!sell_date || !sell_price) { alert('請填寫賣出日期和價格'); return; }
-  closeSellModal(); setStatus('loading', '平倉中...');
-  try { await apiCall({ action: 'sellHolding', symbol: pendingSell.symbol, ids: pendingSell.ids, sell_date, sell_price }); await loadAndRender(); }
+  // 先複製再關閉，避免 closeSellModal 把 pendingSell 清掉
+  const { symbol, ids, currency } = pendingSell;
+  closeSellModal();
+  setStatus('loading', '平倉中...');
+  try { await apiCall({ action: 'sellHolding', symbol, ids, sell_date, sell_price }); await loadAndRender(); }
   catch (e) { setStatus('error', '平倉失敗: ' + e.message); }
 }
 
