@@ -12,12 +12,18 @@ let currentTab = 'active';
 let pendingSell = null, manualPriceResolve = null, isLoading = false;
 let eyeOpen = true;
 let cashTWD = 0;
+let betas = {}; // symbol -> beta value
 let accountOpen = {}, stockOpen = {};
 let currentChartSlide = 0; // 0 = 走勢, 1 = 圓餅
 
-const ACCOUNT_COLORS = ['#00e5ff','#00e676','#ffd600','#ff6b35','#c084fc','#f472b6','#38bdf8','#fb923c'];
 const accountColorMap = {};
 let colorIdx = 0;
+
+// 動態產生均勻分散的顏色，避免相近色
+function generateColor(idx) {
+  const hue = (idx * 137.508) % 360; // 黃金角度，保證每個顏色差異最大
+  return `hsl(${hue.toFixed(0)}, 75%, 60%)`;
+}
 
 // ── 眼睛 ────────────────────────────────────────────
 function toggleEye() {
@@ -144,6 +150,129 @@ async function fetchUSDRate() {
   } catch (e) { log('FX', `失敗，使用預設值 32.5`, 'warn'); return 32.5; }
 }
 
+// ── Beta 抓取（每月一次）────────────────────────────────
+async function fetchBetas(holdingsList) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const needFetch = [];
+
+  for (const h of holdingsList) {
+    const sym = h.symbol;
+    if (betas[sym] !== undefined) continue; // 已有快取
+    const stored = await apiCall({ action: 'getBeta', symbol: sym }).catch(() => null);
+    if (stored && stored.beta != null && stored.updated_at && stored.updated_at.slice(0, 10) > thirtyDaysAgo) {
+      betas[sym] = parseFloat(stored.beta);
+      log('BETA', `${sym} 快取 ${betas[sym]}`, 'info');
+    } else {
+      needFetch.push(sym);
+    }
+  }
+
+  if (!needFetch.length) return;
+
+  log('BETA', `批次抓取: ${needFetch.join(', ')}`);
+  const res = await apiCall({ action: 'getBetas', symbols: needFetch.join(',') }).catch(() => null);
+  if (!res) return;
+
+  for (const [sym, result] of Object.entries(res.data || {})) {
+    if (result.beta != null) {
+      betas[sym] = result.beta;
+      log('BETA', `${sym} = ${result.beta}`, 'ok');
+      try { await apiCall({ action: 'setBeta', symbol: sym, beta: result.beta }); } catch (_) {}
+    } else {
+      log('BETA', `${sym} 無法取得: ${result.error}`, 'warn');
+      // 讀舊快取
+      const stored = await apiCall({ action: 'getBeta', symbol: sym }).catch(() => null);
+      betas[sym] = (stored && stored.beta != null) ? parseFloat(stored.beta) : null;
+    }
+  }
+}
+
+async function saveManualBeta(symbol, betaVal) {
+  betas[symbol] = betaVal;
+  try { await apiCall({ action: 'setBeta', symbol, beta: betaVal }); log('BETA', `${symbol} 手動 Beta ${betaVal} 已存`, 'ok'); }
+  catch (e) { log('BETA', `存入失敗: ${e.message}`, 'err'); }
+  renderBetaSlide();
+}
+
+function calcPortfolioBeta() {
+  const active = holdings.filter(h => !h.sell_date || String(h.sell_date).trim() === '');
+  const groups = {};
+  for (const h of active) { if (!groups[h.symbol]) groups[h.symbol] = []; groups[h.symbol].push(h); }
+
+  let totalTWD = 0;
+  const items = [];
+
+  for (const [sym, sItems] of Object.entries(groups)) {
+    const cur = sItems[0].currency;
+    const p = prices[sym];
+    if (p == null) continue;
+    const shares = sItems.reduce((s, i) => s + parseFloat(i.shares || 0), 0);
+    const valueTWD = toTWD(p * shares, cur);
+    totalTWD += valueTWD;
+    items.push({ symbol: sym, valueTWD, beta: betas[sym] });
+  }
+
+  // 加上現金
+  totalTWD += cashTWD;
+  items.push({ symbol: '現金', valueTWD: cashTWD, beta: 0 });
+
+  let portfolioBeta = 0;
+  let allHaveBeta = true;
+  const rows = items.map(item => {
+    const weight = totalTWD > 0 ? item.valueTWD / totalTWD : 0;
+    if (item.beta == null) { allHaveBeta = false; return { ...item, weight, contribution: null }; }
+    const contribution = weight * item.beta;
+    portfolioBeta += contribution;
+    return { ...item, weight, contribution };
+  });
+
+  return { rows, portfolioBeta: allHaveBeta ? portfolioBeta : null, total: totalTWD };
+}
+
+function renderBetaSlide() {
+  const container = document.getElementById('betaSlide');
+  const { rows, portfolioBeta } = calcPortfolioBeta();
+
+  let html = '';
+
+  // 大數字
+  const betaDisplay = portfolioBeta != null ? portfolioBeta.toFixed(3) : '--';
+  const betaColor = portfolioBeta == null ? 'var(--text-dim)' :
+    portfolioBeta > 1.2 ? 'var(--red)' : portfolioBeta < 0.5 ? 'var(--accent)' : 'var(--green)';
+  html += `<div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;">投資組合 BETA</div>
+    <div style="font-family:var(--mono);font-size:42px;font-weight:700;color:${betaColor};">${betaDisplay}</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px;">${portfolioBeta == null ? '部分股票無 Beta 資料' : portfolioBeta > 1 ? '波動高於大盤' : '波動低於大盤'}</div>
+  </div>`;
+
+  // 明細表
+  html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+  for (const row of rows) {
+    const weightPct = (row.weight * 100).toFixed(1) + '%';
+    const betaStr = row.beta != null ? row.beta.toFixed(3) : '--';
+    const isManualable = row.symbol !== '現金' && row.beta == null;
+    const color = row.symbol === '現金' ? 'hsl(140,70%,55%)' : getStockColor(row.symbol);
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:6px;border-left:3px solid ${color};">
+      <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex:1;">${row.symbol}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);min-width:44px;text-align:right;">${weightPct}</span>
+      <span style="font-family:var(--mono);font-size:12px;font-weight:700;min-width:52px;text-align:right;color:${row.beta==null?'var(--text-muted)':row.beta>1?'var(--red)':'var(--green)'};">${betaStr}</span>
+      ${isManualable ? `<button class="btn btn-sm" style="font-size:9px;padding:3px 6px;" onclick="promptManualBeta('${row.symbol}')">輸入</button>` : '<span style="width:44px;"></span>'}
+    </div>`;
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function promptManualBeta(symbol) {
+  const val = prompt(`請輸入 ${symbol} 的 Beta 值（可從 Yahoo Finance 或券商查詢）：`);
+  if (val === null) return;
+  const beta = parseFloat(val);
+  if (isNaN(beta)) { alert('請輸入有效數字'); return; }
+  saveManualBeta(symbol, beta);
+}
+
 // ── 手動股價 Modal ───────────────────────────────────
 function askManualPrice(symbol, currency) {
   return new Promise(resolve => {
@@ -174,8 +303,16 @@ function ccySymbol(currency) { return currency === 'USD' ? '$' : 'NT$'; }
 // ── 帳戶顏色 ─────────────────────────────────────────
 function getAccountColor(account) {
   const key = account || '未分類';
-  if (!accountColorMap[key]) { accountColorMap[key] = ACCOUNT_COLORS[colorIdx % ACCOUNT_COLORS.length]; colorIdx++; }
+  if (!accountColorMap[key]) { accountColorMap[key] = generateColor(colorIdx); colorIdx++; }
   return accountColorMap[key];
+}
+
+// 股票用獨立的顏色系統，跟帳戶顏色分開
+const stockColorMap = {};
+let stockColorIdx = 0;
+function getStockColor(symbol) {
+  if (!stockColorMap[symbol]) { stockColorMap[symbol] = generateColor(stockColorIdx + 5); stockColorIdx++; }
+  return stockColorMap[symbol];
 }
 
 // ── Tabs ─────────────────────────────────────────────
@@ -277,12 +414,12 @@ function buildPieData() {
 
   const labels = items.map(i => i.label);
   const values = items.map(i => i.value);
-  const colors = items.map(i => getAccountColor(i.label)); // 每支股票用固定色
+  const colors = items.map(i => getStockColor(i.label));
 
   if (cashTWD > 0) {
     labels.push('現金');
     values.push(cashTWD);
-    colors.push('#4ade80');
+    colors.push('hsl(140, 70%, 55%)');
   }
 
   return { labels, values, colors, total };
@@ -646,6 +783,7 @@ async function loadAndRender() {
   renderHoldingsContainer();
   renderLineChart();
   renderPieChart();
+  renderBetaSlide();
 
   // 第二階段：更新
   usdRate = await fetchUSDRate();
@@ -662,6 +800,12 @@ async function loadAndRender() {
   renderHoldingsContainer();
   renderLineChart();
   renderPieChart();
+
+  // 抓 Beta（每月一次）
+  const activeForBeta = holdings.filter(h => !h.sell_date || String(h.sell_date).trim() === '');
+  const uniqueForBeta = [...new Map(activeForBeta.map(h => [h.symbol, h])).values()];
+  await fetchBetas(uniqueForBeta);
+  renderBetaSlide();
 
   if (totalAsset > 0) {
     const today = new Date().toISOString().slice(0, 10);
