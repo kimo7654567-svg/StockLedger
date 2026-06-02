@@ -77,7 +77,9 @@ body::before {
 .chart-carousel { display:flex; transition:transform 0.35s cubic-bezier(.4,0,.2,1); }
 .chart-slide { min-width:100%; padding:16px; }
 .chart-slide-title { font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
-canvas { width:100% !important; height:180px !important; }
+canvas { width:100% !important; }
+#assetChart { height:180px !important; }
+#allocationChart { height:auto !important; }
 .chart-empty { height:180px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:11px; font-family:var(--mono); border:1px dashed var(--border); border-radius:6px; text-align:center; padding:16px; }
 .chart-dots { display:flex; justify-content:center; gap:6px; padding:10px 0 14px; }
 .chart-dot { width:6px; height:6px; border-radius:50%; background:var(--border); cursor:pointer; transition:background 0.2s; }
