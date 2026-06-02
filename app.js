@@ -150,41 +150,19 @@ async function fetchUSDRate() {
   } catch (e) { log('FX', `失敗，使用預設值 32.5`, 'warn'); return 32.5; }
 }
 
-// ── Beta 抓取（每月一次）────────────────────────────────
+// ── Beta 載入（從 Sheet 讀取，純手動）────────────────────
 async function fetchBetas(holdingsList) {
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const needFetch = [];
-
-  for (const h of holdingsList) {
-    const sym = h.symbol;
-    if (betas[sym] !== undefined) continue; // 已有快取
-    const stored = await apiCall({ action: 'getBeta', symbol: sym }).catch(() => null);
-    if (stored && stored.beta != null && stored.updated_at && stored.updated_at.slice(0, 10) > thirtyDaysAgo) {
-      betas[sym] = parseFloat(stored.beta);
-      log('BETA', `${sym} 快取 ${betas[sym]}`, 'info');
-    } else {
-      needFetch.push(sym);
-    }
-  }
-
-  if (!needFetch.length) return;
-
-  log('BETA', `批次抓取: ${needFetch.join(', ')}`);
-  const res = await apiCall({ action: 'getBetas', symbols: needFetch.join(',') }).catch(() => null);
-  if (!res) return;
-
-  for (const [sym, result] of Object.entries(res.data || {})) {
-    if (result.beta != null) {
-      betas[sym] = result.beta;
-      log('BETA', `${sym} = ${result.beta}`, 'ok');
-      try { await apiCall({ action: 'setBeta', symbol: sym, beta: result.beta }); } catch (_) {}
-    } else {
-      log('BETA', `${sym} 無法取得: ${result.error}`, 'warn');
-      // 讀舊快取
-      const stored = await apiCall({ action: 'getBeta', symbol: sym }).catch(() => null);
-      betas[sym] = (stored && stored.beta != null) ? parseFloat(stored.beta) : null;
-    }
+  try {
+    const res = await apiCall({ action: 'getAllBetas' });
+    const rows = res.data || [];
+    rows.forEach(r => {
+      if (r.symbol && r.beta != null && r.beta !== '') {
+        betas[String(r.symbol).trim()] = parseFloat(r.beta);
+      }
+    });
+    log('BETA', `載入 ${rows.length} 筆 Beta 資料`, 'ok');
+  } catch(e) {
+    log('BETA', `載入失敗: ${e.message}`, 'err');
   }
 }
 
@@ -266,7 +244,7 @@ function renderBetaSlide() {
       <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex:1;">${row.symbol}</span>
       <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);min-width:44px;text-align:right;">${weightPct}</span>
       <span style="font-family:var(--mono);font-size:12px;font-weight:700;min-width:52px;text-align:right;color:${row.beta==null?'var(--text-muted)':row.beta>1?'var(--red)':'var(--green)'};">${betaStr}</span>
-      ${isManualable ? `<button class="btn btn-sm" style="font-size:9px;padding:3px 6px;" onclick="promptManualBeta('${row.symbol}')">輸入</button>` : '<span style="width:44px;"></span>'}
+      `<button class="btn btn-sm" style="font-size:9px;padding:3px 6px;" onclick="promptManualBeta('${row.symbol}')">${row.beta != null ? "修改" : "輸入"}</button>`
     </div>`;
   }
   html += '</div>';
@@ -283,7 +261,8 @@ function toggleBetaSection() {
 }
 
 function promptManualBeta(symbol) {
-  const val = prompt(`請輸入 ${symbol} 的 Beta 值（可從 Yahoo Finance 或券商查詢）：`);
+  const current = betas[symbol] != null ? betas[symbol] : '';
+  const val = prompt(`${symbol} Beta 值（目前：${current || '未設定'}）：`, current);
   if (val === null) return;
   const beta = parseFloat(val);
   if (isNaN(beta)) { alert('請輸入有效數字'); return; }
@@ -819,10 +798,8 @@ async function loadAndRender() {
   renderLineChart();
   renderPieChart();
 
-  // 抓 Beta（每月一次）
-  const activeForBeta = holdings.filter(h => !h.sell_date || String(h.sell_date).trim() === '');
-  const uniqueForBeta = [...new Map(activeForBeta.map(h => [h.symbol, h])).values()];
-  await fetchBetas(uniqueForBeta);
+  // 載入 Beta
+  await fetchBetas();
   renderBetaSlide();
 
   if (totalAsset > 0) {
