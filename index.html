@@ -20,7 +20,7 @@
       <div class="rate-display">USD <span id="usdRate">--</span></div>
       <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="隱藏金額">👁</button>
       <a href="https://kimo7654567-svg.github.io/Extensions-/" target="_blank" class="version-badge" style="text-decoration:none;color:var(--accent);border-color:var(--accent);">策略G</a>
-      <div class="version-badge">v1.12</div>
+      <div class="version-badge">v1.13</div>
     </div>
   </div>
 
@@ -79,11 +79,17 @@
           <div class="chart-empty" id="pieEmpty" style="display:none">尚無持倉資料</div>
           <canvas id="allocationChart" style="display:none"></canvas>
         </div>
+        <!-- Beta -->
+        <div class="chart-slide">
+          <div class="chart-slide-title">▸ 投資組合 Beta</div>
+          <div id="betaSlide" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;padding:20px;">載入中...</div>
+        </div>
       </div>
     </div>
     <div class="chart-dots">
       <div class="chart-dot active" onclick="goToSlide(0)"></div>
       <div class="chart-dot" onclick="goToSlide(1)"></div>
+      <div class="chart-dot" onclick="goToSlide(2)"></div>
     </div>
   </div>
 
