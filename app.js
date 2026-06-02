@@ -244,7 +244,7 @@ function renderBetaSlide() {
       <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color};flex:1;">${row.symbol}</span>
       <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);min-width:44px;text-align:right;">${weightPct}</span>
       <span style="font-family:var(--mono);font-size:12px;font-weight:700;min-width:52px;text-align:right;color:${row.beta==null?'var(--text-muted)':row.beta>1?'var(--red)':'var(--green)'};">${betaStr}</span>
-      `<button class="btn btn-sm" style="font-size:9px;padding:3px 6px;" onclick="promptManualBeta('${row.symbol}')">${row.beta != null ? "修改" : "輸入"}</button>`
+      <button class="btn btn-sm" style="font-size:9px;padding:3px 6px;" onclick="promptManualBeta('${row.symbol}')">${row.beta != null ? "修改" : "輸入"}</button>
     </div>`;
   }
   html += '</div>';
