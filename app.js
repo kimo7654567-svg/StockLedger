@@ -234,14 +234,23 @@ function renderBetaSlide() {
   const container = document.getElementById('betaSlide');
   const { rows, portfolioBeta } = calcPortfolioBeta();
 
+  // 更新 header 摺疊列的數字
+  const summaryEl = document.getElementById('betaSummary');
+  if (summaryEl) {
+    const betaDisplay = portfolioBeta != null ? portfolioBeta.toFixed(3) : '--';
+    const betaColor = portfolioBeta == null ? 'var(--text-dim)' :
+      portfolioBeta > 1.2 ? 'var(--red)' : portfolioBeta < 0.5 ? 'var(--accent)' : 'var(--green)';
+    summaryEl.textContent = betaDisplay;
+    summaryEl.style.color = betaColor;
+  }
+
   let html = '';
 
   // 大數字
   const betaDisplay = portfolioBeta != null ? portfolioBeta.toFixed(3) : '--';
   const betaColor = portfolioBeta == null ? 'var(--text-dim)' :
     portfolioBeta > 1.2 ? 'var(--red)' : portfolioBeta < 0.5 ? 'var(--accent)' : 'var(--green)';
-  html += `<div style="text-align:center;margin-bottom:16px;">
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;">投資組合 BETA</div>
+  html += `<div style="text-align:center;margin-bottom:16px;padding-top:4px;">
     <div style="font-family:var(--mono);font-size:42px;font-weight:700;color:${betaColor};">${betaDisplay}</div>
     <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px;">${portfolioBeta == null ? '部分股票無 Beta 資料' : portfolioBeta > 1 ? '波動高於大盤' : '波動低於大盤'}</div>
   </div>`;
@@ -263,6 +272,14 @@ function renderBetaSlide() {
   html += '</div>';
 
   container.innerHTML = html;
+}
+
+function toggleBetaSection() {
+  const section = document.getElementById('betaSection');
+  const chevron = document.getElementById('betaChevron');
+  const isOpen = section.style.display !== 'none';
+  section.style.display = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
 function promptManualBeta(symbol) {
@@ -491,12 +508,14 @@ function renderPieChart() {
       datasets: [{ data: pieData.values, backgroundColor: pieData.colors, borderColor: '#0a0e1a', borderWidth: 2, hoverBorderWidth: 3 }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1.6,
       cutout: '55%',
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, padding: 10, boxWidth: 10 }
+          labels: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, padding: 8, boxWidth: 10 }
         },
         tooltip: {
           backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1,
@@ -783,7 +802,6 @@ async function loadAndRender() {
   renderHoldingsContainer();
   renderLineChart();
   renderPieChart();
-  renderBetaSlide();
 
   // 第二階段：更新
   usdRate = await fetchUSDRate();
