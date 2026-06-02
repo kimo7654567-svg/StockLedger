@@ -3,7 +3,7 @@
 // ============================
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbxu3gi22-UbEG1zZYJ2JQ3vWuRy6w7xVZvcpUzwlU7Jqs6x3gj4doW37RqmgpzN_b_loA/exec';
-let TOKEN = localStorage.getItem('sl_token') || '';
+const TOKEN = 'tien5566'; // hardcoded
 
 let holdings = [], transactions = [], snapshots = [];
 let prices = {}, lastPrices = {}, lastPricesWithDate = {};
@@ -730,16 +730,9 @@ async function confirmSell() {
   catch (e) { setStatus('error', '平倉失敗: ' + e.message); }
 }
 
-// ── Setup ─────────────────────────────────────────────
-function showSetup() { document.getElementById('setupOverlay').classList.add('visible'); document.getElementById('setup_token').value = TOKEN; }
-
-function saveSetup() {
-  const token = document.getElementById('setup_token').value.trim();
-  if (!token) { alert('請填寫 Token'); return; }
-  localStorage.setItem('sl_token', token); TOKEN = token;
-  document.getElementById('setupOverlay').classList.remove('visible');
-  log('SETUP', '設定已儲存', 'ok'); loadAndRender();
-}
+// ── Setup（已停用 token 輸入）──────────────────────────
+function showSetup() { alert('目前使用內建連線設定'); }
+function saveSetup() {}
 
 // ── 主流程 ────────────────────────────────────────────
 async function loadAndRender() {
@@ -821,5 +814,5 @@ async function loadAndRender() {
 // ── 啟動 ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initChartSwipe();
-  if (!TOKEN) { showSetup(); } else { loadAndRender(); }
+  loadAndRender();
 });
