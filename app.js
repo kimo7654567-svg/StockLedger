@@ -600,7 +600,7 @@ function renderHoldingsContainer() {
               <div class="detail-item"><label>帳戶</label><div class="val" style="color:${color};font-size:11px;">${account}</div></div>
             </div>
             <div class="detail-actions">
-              ${!sold ? `<button class="btn btn-warn btn-sm" onclick="openSellModal('${symbol}','${ids}','${cur}')">平倉</button>` : ''}
+              ${!sold ? `<button class="btn btn-warn btn-sm" onclick="openSellModal('${symbol}','${ids}','${cur}')">賣出</button>` : ''}
               <button class="btn btn-danger btn-sm" onclick="confirmDelete('${ids}','${symbol}')">刪除</button>
             </div>
           </div>
@@ -708,10 +708,17 @@ async function confirmDelete(ids, symbol) {
 
 // ── 賣出 ─────────────────────────────────────────────
 function openSellModal(symbol, ids, currency) {
-  pendingSell = { symbol, ids, currency };
-  document.getElementById('sellModalSub').textContent = `${symbol} — 填入賣出資訊`;
+  // 計算該 symbol 目前總股數
+  const active = holdings.filter(h =>
+    h.symbol === symbol && (!h.sell_date || String(h.sell_date).trim() === '')
+  );
+  const totalShares = active.reduce((s, i) => s + parseFloat(i.shares || 0), 0);
+
+  pendingSell = { symbol, ids, currency, totalShares };
+  document.getElementById('sellModalSub').textContent = `${symbol} — 目前持有 ${fmt(totalShares, 2)} 股`;
   document.getElementById('sell_date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('sell_price').value = prices[symbol] ? prices[symbol] : '';
+  document.getElementById('sell_shares').value = fmt(totalShares, 2); // 預設全賣
   document.getElementById('sellModal').classList.add('visible');
 }
 
@@ -721,13 +728,16 @@ async function confirmSell() {
   if (!pendingSell) return;
   const sell_date = document.getElementById('sell_date').value;
   const sell_price = document.getElementById('sell_price').value;
-  if (!sell_date || !sell_price) { alert('請填寫賣出日期和價格'); return; }
-  // 先複製再關閉，避免 closeSellModal 把 pendingSell 清掉
+  const sell_shares = document.getElementById('sell_shares').value;
+  if (!sell_date || !sell_price || !sell_shares) { alert('請填寫賣出日期、價格和股數'); return; }
+  const sellSharesNum = parseFloat(sell_shares);
+  if (isNaN(sellSharesNum) || sellSharesNum <= 0) { alert('請輸入有效股數'); return; }
+  if (sellSharesNum > pendingSell.totalShares) { alert(`最多只能賣 ${fmt(pendingSell.totalShares, 2)} 股`); return; }
   const { symbol, ids, currency } = pendingSell;
   closeSellModal();
-  setStatus('loading', '平倉中...');
-  try { await apiCall({ action: 'sellHolding', symbol, ids, sell_date, sell_price }); await loadAndRender(); }
-  catch (e) { setStatus('error', '平倉失敗: ' + e.message); }
+  setStatus('loading', '處理賣出中...');
+  try { await apiCall({ action: 'sellHolding', symbol, ids, sell_date, sell_price, sell_shares: sellSharesNum }); await loadAndRender(); }
+  catch (e) { setStatus('error', '賣出失敗: ' + e.message); }
 }
 
 // ── Setup（已停用 token 輸入）──────────────────────────
