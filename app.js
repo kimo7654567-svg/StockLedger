@@ -462,6 +462,16 @@ function aggregateSnapshots(unit) {
   return { labels: [...map.keys()], values: [...map.values()] };
 }
 
+function fixCanvasDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return; // not visible yet
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+}
+
 function renderLineChart() {
   const canvas = document.getElementById('assetChart');
   const empty = document.getElementById('chartEmpty');
@@ -480,27 +490,28 @@ function renderLineChart() {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      devicePixelRatio: window.devicePixelRatio || 1,
       plugins: {
         legend: { display: false },
         tooltip: {
           backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1,
           titleColor: '#64748b', bodyColor: '#e2e8f0',
-          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 11 },
+          titleFont: { family: 'Space Mono', size: 12 }, bodyFont: { family: 'Space Mono', size: 13 },
           callbacks: { label: ctx => `NT$ ${fmt(ctx.parsed.y * 10000)}（${fmt(ctx.parsed.y)}萬）` }
         }
       },
       scales: {
         x: {
           grid: { color: 'rgba(30,45,69,0.5)' },
-          ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 8 }
+          ticks: { color: '#94a3b8', font: { family: 'Space Mono', size: 11 }, maxTicksLimit: 6 }
         },
         y: {
           grid: { color: 'rgba(30,45,69,0.5)' },
           ticks: {
-            color: '#64748b', font: { family: 'Space Mono', size: 9 },
+            color: '#94a3b8', font: { family: 'Space Mono', size: 11 },
             callback: v => fmt(v)
           },
-          title: { display: true, text: '單位：萬', color: '#334155', font: { family: 'Space Mono', size: 9 } }
+          title: { display: true, text: '單位：萬', color: '#64748b', font: { family: 'Space Mono', size: 11 } }
         }
       }
     }
@@ -529,16 +540,17 @@ function renderPieChart() {
       responsive: true,
       maintainAspectRatio: true,
       aspectRatio: 1.6,
+      devicePixelRatio: window.devicePixelRatio || 1,
       cutout: '55%',
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, padding: 8, boxWidth: 10 }
+          labels: { color: '#94a3b8', font: { family: 'Space Mono', size: 11 }, padding: 10, boxWidth: 12 }
         },
         tooltip: {
           backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1,
           titleColor: '#64748b', bodyColor: '#e2e8f0',
-          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 11 },
+          titleFont: { family: 'Space Mono', size: 12 }, bodyFont: { family: 'Space Mono', size: 13 },
           callbacks: {
             label: ctx => {
               const pct = ((ctx.parsed / total) * 100).toFixed(1) + '%';
