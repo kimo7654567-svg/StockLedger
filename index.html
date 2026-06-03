@@ -6,6 +6,9 @@
 <title>StockLedger</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+.chart-unit-btn.active { border-color:var(--accent) !important; color:var(--accent) !important; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -20,7 +23,7 @@
       <div class="rate-display">USD <span id="usdRate">--</span></div>
       <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="隱藏金額">👁</button>
       <a href="https://kimo7654567-svg.github.io/Extensions-/" target="_blank" class="version-badge" style="text-decoration:none;color:var(--accent);border-color:var(--accent);">策略G</a>
-      <div class="version-badge">v1.18</div>
+      <div class="version-badge">v1.19</div>
     </div>
   </div>
 
@@ -69,7 +72,14 @@
       <div class="chart-carousel" id="chartCarousel">
         <!-- 走勢圖 -->
         <div class="chart-slide">
-          <div class="chart-slide-title">▸ 總資產歷史走勢（台幣）</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div class="chart-slide-title" style="margin:0;">▸ 總資產歷史走勢（台幣）</div>
+            <div style="display:flex;gap:4px;">
+              <button class="chart-unit-btn active" data-unit="day" onclick="setChartUnit('day')" style="font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">日</button>
+              <button class="chart-unit-btn" data-unit="month" onclick="setChartUnit('month')" style="font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">月</button>
+              <button class="chart-unit-btn" data-unit="year" onclick="setChartUnit('year')" style="font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">年</button>
+            </div>
+          </div>
           <div class="chart-empty" id="chartEmpty">資料累積中，每次開啟自動記錄節點</div>
           <canvas id="assetChart" style="display:none"></canvas>
         </div>
