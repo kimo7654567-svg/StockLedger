@@ -440,29 +440,68 @@ function initChartSwipe() {
 }
 
 // ── 走勢圖 ───────────────────────────────────────────
+let chartTimeUnit = 'day'; // 'day' | 'month' | 'year'
+
+function setChartUnit(unit) {
+  chartTimeUnit = unit;
+  document.querySelectorAll('.chart-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === unit));
+  renderLineChart();
+}
+
+function aggregateSnapshots(unit) {
+  if (!snapshots.length) return { labels: [], values: [] };
+  const map = new Map();
+  snapshots.forEach(s => {
+    const date = String(s.date).slice(0, 10);
+    let key;
+    if (unit === 'year') key = date.slice(0, 4);
+    else if (unit === 'month') key = date.slice(0, 7);
+    else key = date;
+    map.set(key, parseFloat(s.total_twd)); // 後面的覆蓋前面的 = 取該期間最後一筆
+  });
+  return { labels: [...map.keys()], values: [...map.values()] };
+}
+
 function renderLineChart() {
   const canvas = document.getElementById('assetChart');
   const empty = document.getElementById('chartEmpty');
   if (!snapshots.length) { canvas.style.display = 'none'; empty.style.display = 'flex'; return; }
   empty.style.display = 'none'; canvas.style.display = 'block';
-  const labels = snapshots.map(s => String(s.date));
-  const values = snapshots.map(s => parseFloat(s.total_twd));
+
+  const { labels, values } = aggregateSnapshots(chartTimeUnit);
+  const valuesInWan = values.map(v => Math.round(v / 10000));
+
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels,
-      datasets: [{ data: values, borderColor: '#00e5ff', backgroundColor: 'rgba(0,229,255,0.06)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#00e5ff', pointBorderColor: '#0a0e1a', pointBorderWidth: 2, fill: true, tension: 0.3 }]
+      datasets: [{ data: valuesInWan, borderColor: '#00e5ff', backgroundColor: 'rgba(0,229,255,0.06)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#00e5ff', pointBorderColor: '#0a0e1a', pointBorderWidth: 2, fill: true, tension: 0.3 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1, titleColor: '#64748b', bodyColor: '#e2e8f0', titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 11 }, callbacks: { label: ctx => `NT$ ${fmt(ctx.parsed.y)}` } }
+        tooltip: {
+          backgroundColor: '#111827', borderColor: '#1e2d45', borderWidth: 1,
+          titleColor: '#64748b', bodyColor: '#e2e8f0',
+          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 11 },
+          callbacks: { label: ctx => `NT$ ${fmt(ctx.parsed.y * 10000)}（${fmt(ctx.parsed.y)}萬）` }
+        }
       },
       scales: {
-        x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, callback: function(val, idx) { const s = this.getLabelForValue(val); return s ? s.slice(0,10) : ''; } } },
-        y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, callback: v => 'NT$' + fmt(v) } }
+        x: {
+          grid: { color: 'rgba(30,45,69,0.5)' },
+          ticks: { color: '#64748b', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 8 }
+        },
+        y: {
+          grid: { color: 'rgba(30,45,69,0.5)' },
+          ticks: {
+            color: '#64748b', font: { family: 'Space Mono', size: 9 },
+            callback: v => fmt(v)
+          },
+          title: { display: true, text: '單位：萬', color: '#334155', font: { family: 'Space Mono', size: 9 } }
+        }
       }
     }
   });
