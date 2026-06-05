@@ -736,13 +736,21 @@ async function addHolding() {
   const currency = document.getElementById('f_currency').value;
   const account = document.getElementById('f_account').value.trim();
   const buy_date = document.getElementById('f_date').value;
-  const buy_price = document.getElementById('f_price').value;
-  const shares = document.getElementById('f_shares').value;
+  const buy_price = parseFloat(document.getElementById('f_price').value);
+  const shares = parseFloat(document.getElementById('f_shares').value);
   const note = document.getElementById('f_note').value;
   if (!symbol || !buy_date || !buy_price || !shares || !account) { alert('請填寫代碼、帳戶、日期、買入價格和股數'); return; }
   setStatus('loading', '新增持股中...');
   try {
     await apiCall({ action: 'addHolding', symbol, currency, account, buy_date, buy_price, shares, note });
+
+    // 現金扣除：買入金額換算台幣
+    const costTWD = toTWD(buy_price * shares, currency);
+    const newCash = Math.max(0, cashTWD - costTWD);
+    await apiCall({ action: 'setSetting', key: 'cash_twd', value: newCash.toFixed(0) });
+    cashTWD = newCash;
+    log('CASH', `買入 ${symbol} 扣除 NT$${fmt(costTWD)}，現金剩 NT$${fmt(newCash)}`, 'ok');
+
     toggleAddForm();
     ['f_symbol', 'f_price', 'f_shares', 'f_note', 'f_account'].forEach(id => document.getElementById(id).value = '');
     await loadAndRender();
@@ -787,7 +795,18 @@ async function confirmSell() {
   const { symbol, ids, currency } = pendingSell;
   closeSellModal();
   setStatus('loading', '處理賣出中...');
-  try { await apiCall({ action: 'sellHolding', symbol, ids, sell_date, sell_price, sell_shares: sellSharesNum }); await loadAndRender(); }
+  try {
+    await apiCall({ action: 'sellHolding', symbol, ids, sell_date, sell_price, sell_shares: sellSharesNum });
+
+    // 現金增加：賣出金額換算台幣
+    const proceedsTWD = toTWD(parseFloat(sell_price) * sellSharesNum, currency);
+    const newCash = cashTWD + proceedsTWD;
+    await apiCall({ action: 'setSetting', key: 'cash_twd', value: newCash.toFixed(0) });
+    cashTWD = newCash;
+    log('CASH', `賣出 ${symbol} 增加 NT$${fmt(proceedsTWD)}，現金變 NT$${fmt(newCash)}`, 'ok');
+
+    await loadAndRender();
+  }
   catch (e) { setStatus('error', '賣出失敗: ' + e.message); }
 }
 
